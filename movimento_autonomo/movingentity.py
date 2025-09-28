@@ -1,7 +1,8 @@
 import sys
+import pygame
+
 from abc import ABC, abstractmethod
 
-import pygame
 
 class BaseGameEntity (ABC):
     _next_id = 1000
@@ -13,16 +14,53 @@ class BaseGameEntity (ABC):
     @abstractmethod
     def update(self): pass
 
+class State (ABC):
+    @abstractmethod
+    def execute(entity: BaseGameEntity): pass
+
+    @abstractmethod
+    def enter(entity: BaseGameEntity): pass
+
+    @abstractmethod
+    def exit(entity: BaseGameEntity): pass
+
+
+class StateMachine:
+    def __init__(self, owner: BaseGameEntity, start_state):
+        self.owner = owner
+        self.current_state = start_state
+        self.previous_state = None
+    
+    def update(self) -> None:
+        self.current_state.execute(self.owner)
+
+    def change_state(self, new_state: State) -> None:
+        if new_state is None:
+            return
+        
+        new_state_name = new_state.__class__.__name__
+        if not self.owner.state_permissions.get(new_state_name, True):
+            print(f"[DEBUG] {self.owner.ID}: NÃO PODE ENTRAR NO ESTADO {new_state_name}.")
+            return
+
+        self.current_state.exit(self.owner)
+        self.current_state = new_state
+        self.current_state.enter(self.owner)
+
+
 class MovingEntity (BaseGameEntity):
-    def __init__(self, x, y, mass = 0, max_speed = 0, max_force = 0, start_state = None, target = None):
+    def __init__(self, x, y, mass = 1, max_speed = 1, max_force = 1, start_state = None, target = None):
         super().__init__()
 
         # Relativo aos estados da Entidade.
         self.state_machine = StateMachine(self, start_state)
-        self.fleeing       = False
-        self.seeking       = False
-        self.arriving      = False
-        self.pursuing      = False
+        self.state_permissions = {
+            "Seek"    : True,
+            "Arrive"  : True,
+            "Flee"    : True,
+            "Pursuit" : True,
+            "Evade"   : True,
+        }
 
         # Relativo a movimentação da Entidade.
         self.position     = pygame.math.Vector2(x, y)
@@ -79,46 +117,23 @@ class MovingEntity (BaseGameEntity):
 
     def limit_the_entity(self, WIDTH, HEIGHT):
         if self.position.x < 0:
-            self.position.x = HEIGHT
-        elif self.position.x > HEIGHT:
+            self.position.x = WIDTH
+        elif self.position.x > WIDTH:
             self.position.x = 0
-        elif self.position.y < 0:
-            self.position.y = WIDTH
-        elif self.position.y > WIDTH:
+        if self.position.y < 0:
+            self.position.y = HEIGHT
+        elif self.position.y > HEIGHT:
             self.position.y = 0
 
     def draw(self, screen) -> None:
         pygame.draw.circle(screen, self.color, self.position, 5)
+        # pygame.draw.circle(screen, "purple", self.position, 300, 1)
+        # pygame.draw.circle(screen, "green", self.position, 50, 1)
 
     def update(self, delta_time = 0) -> None:
         self.state_machine.update()
         self._update_position(delta_time)
 
-class State (ABC):
-    @abstractmethod
-    def execute(entity: MovingEntity): pass
-
-    @abstractmethod
-    def enter(entity: MovingEntity): pass
-
-    @abstractmethod
-    def exit(entity: MovingEntity): pass
-
-class StateMachine:
-    def __init__(self, owner: MovingEntity, start_state):
-        self.owner = owner
-        self.current_state = start_state
-    
-    def update(self) -> None:
-        self.current_state.execute(self.owner)
-
-    def change_state(self, new_state: State) -> None:
-        if new_state is None:
-            return
-
-        self.current_state.exit(self.owner)
-        self.current_state = new_state
-        self.current_state.enter(self.owner)
 
 class Flee (State):
     def execute(self, entity: MovingEntity):
@@ -132,14 +147,12 @@ class Flee (State):
         entity.apply_force(steering_force)
 
     def enter(self, entity: MovingEntity):
-        if not entity.fleeing:
-            print(f"[DEBUG] {entity.ID}: ENTRANDO NO MODO DE FUGA.")
-            entity.fleeing = True
-            entity.change_color("blue")
+        print(f"[DEBUG] {entity.ID}: ENTRANDO NO MODO DE FUGA.")
+        entity.change_color("blue")
 
     def exit(self, entity: MovingEntity):
         print(f"[DEBUG] {entity.ID}: SAINDO DO MODO DE FUGA.")
-        entity.fleeing = False
+
 
 class Seek (State):
     def execute(self, entity: MovingEntity):
@@ -158,14 +171,12 @@ class Seek (State):
         entity.apply_force(steering_force)
 
     def enter(self, entity: MovingEntity):
-        if not entity.seeking:
-            print(f"[DEBUG] {entity.ID}: ENTRANDO NO MODO DE BUSCA.")
-            entity.seeking = True
-            entity.change_color("red")
+        print(f"[DEBUG] {entity.ID}: ENTRANDO NO MODO DE BUSCA.")
+        entity.change_color("red")
 
     def exit(self, entity: MovingEntity):
         print(f"[DEBUG] {entity.ID}: SAINDO DO MODO DE BUSCA.")
-        entity.seeking = False
+
 
 class Arrive (State):
     def __init__(self, deceleration = 2):
@@ -183,7 +194,7 @@ class Arrive (State):
         desired_velocity = entity.to_target * speed / max(1, entity.distance)
         steering_force = desired_velocity - entity.velocity
 
-        if steering_force.length() > entity.max_force:
+        if steering_force.length() > entity.max_force + 100:
             steering_force.normalize_ip()
             steering_force *= entity.max_force
 
@@ -194,42 +205,70 @@ class Arrive (State):
             entity.state_machine.change_state(SEEK)
 
     def enter(self, entity: MovingEntity):
-        if not entity.arriving:
-            print(f"[DEBUG] {entity.ID}: ENTRANDO NO MODO DE CHEGADA.")
-            entity.arriving = True
-            entity.change_color("green")
+        print(f"[DEBUG] {entity.ID}: ENTRANDO NO MODO DE CHEGADA.")
+        entity.change_color("green")
     
     def exit(self, entity: MovingEntity):
         print(f"[DEBUG] {entity.ID}: SAINDO DO MODO DE CHEGADA.")
-        entity.arriving = False
 
-class Pursuit (State):
+
+class Pursuit(State):
     def execute(self, entity: MovingEntity):
-        if not entity.target_entity: return 
-        
-        if entity.distance < 50: 
-            entity.state_machine.change_state(ARRIVE)
-            return
-        elif entity.distance > 200:
-            entity.state_machine.change_state(SEEK)
+        if not entity.target_entity:
             return
 
         evader = entity.target_entity
         to_evader = evader.position - entity.position
-        relative_heading = entity.heading.dot(evader.heading)
+        distance = to_evader.length()
 
-        if to_evader.dot(entity.heading) > 0 and relative_heading < -0.95:
+        if distance < 50:
+            entity.state_machine.change_state(ARRIVE)
+            return
+        elif distance > 300: 
             entity.state_machine.change_state(SEEK)
             return
 
         relative_speed = entity.velocity.length() + evader.velocity.length()
-        if relative_speed < 0.01: look_ahead_time = 0
-        else: look_ahead_time = to_evader.length() / relative_speed
+        look_ahead_time = 0 if relative_speed < 1e-5 else distance / relative_speed
 
         predicted_pos = evader.position + evader.velocity * look_ahead_time
         entity.change_target(predicted_pos)
 
-        desired_velocity = (entity.target_position - entity.position).normalize() * entity.max_speed
+        desired_velocity = (predicted_pos - entity.position).normalize() * entity.max_speed
+        steering_force = desired_velocity - entity.velocity
+
+        if steering_force.length() > entity.max_force:
+            steering_force.scale_to_length(entity.max_force)
+
+        entity.apply_force(steering_force)
+
+    def enter(self, entity: MovingEntity):
+        print(f"[DEBUG] {entity.ID}: ENTRANDO NO MODO DE PERSEGUIÇÃO.")
+        entity.change_color("purple")
+
+    def exit(self, entity: MovingEntity):
+        print(f"[DEBUG] {entity.ID}: SAINDO DO MODO DE PERSEGUIÇÃO.")
+
+
+class Evade (State):
+    def execute(self, entity: MovingEntity):
+        if not entity.target_entity: return 
+        
+        elif entity.distance > 200:
+            entity.state_machine.change_state(FLEE)
+            return
+
+        pursuer = entity.target_entity
+        to_pursuer = pursuer.position - entity.position
+
+        relative_speed = entity.velocity.length() + pursuer.velocity.length()
+        if relative_speed < 0.01: look_ahead_time = 0
+        else: look_ahead_time = to_pursuer.length() / relative_speed
+
+        predicted_pos = pursuer.position + pursuer.velocity * look_ahead_time
+        entity.change_target(predicted_pos)
+
+        desired_velocity = (entity.position - entity.target_position).normalize() * entity.max_speed
 
         steering_force = desired_velocity - entity.velocity
         if steering_force.length() > entity.max_force:
@@ -237,18 +276,17 @@ class Pursuit (State):
             steering_force *= entity.max_force
 
         entity.apply_force(steering_force)
-    
+
     def enter(self, entity: MovingEntity):
-        if not entity.pursuing:
-            print(f"[DEBUG] {entity.ID}: ENTRANDO NO MODO DE PERSEGUIÇÃO.")
-            entity.pursuing = True
-            entity.change_color("violet")
+        print(f"[DEBUG] {entity.ID}: ENTRANDO NO MODO DE ESCAPE.")
+        entity.change_color("violet")
     
     def exit(self, entity: MovingEntity):
-        print(f"[DEBUG] {entity.ID}: SAINDO DO MODO DE PERSEGUIÇÃO.")
-        entity.pursuing = False
+        print(f"[DEBUG] {entity.ID}: SAINDO DO MODO DE ESCAPE.")
+
 
 PURSUIT = Pursuit()
 ARRIVE = Arrive(deceleration=1)
+EVADE = Evade()
 FLEE   = Flee()
 SEEK   = Seek()

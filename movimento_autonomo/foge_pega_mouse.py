@@ -2,7 +2,7 @@ import pygame
 import random
 import time
 
-from movingentity import MovingEntity, SEEK, FLEE, ARRIVE, PURSUIT
+from movingentity import MovingEntity, SEEK, FLEE, ARRIVE, PURSUIT, EVADE
 
 def generate_random_position(WIDTH, HEIGHT):
     x = random.randrange(1, WIDTH - 1)
@@ -11,6 +11,9 @@ def generate_random_position(WIDTH, HEIGHT):
 
 def main():
     pygame.init()
+
+    game_title: str = "Movimento Autônomo"
+    pygame.display.set_caption(game_title)
 
     WIDTH, HEIGHT = 800, 800
     SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -21,7 +24,7 @@ def main():
     entities = [entity_one, entity_two]
 
     random_position = generate_random_position(WIDTH, HEIGHT)
-    change_time = time.time() + 1.5
+    time_stamp = time.time() + 3
 
     running = True
     while running:
@@ -33,13 +36,13 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
 
-        if(time.time() >= change_time):
+        if time.time() >= time_stamp:
             random_position = generate_random_position(WIDTH, HEIGHT)
-            change_time = time.time() + 3.5
+            time_stamp = time.time() + 2
 
         entity_one.change_target(random_position)
-        entity_two.change_target(entity_one.position)
 
+        entity_two.change_target(entity_one.position)
         entity_two.change_target_speed(entity_one.velocity)
         
         for entity in entities:
@@ -49,6 +52,9 @@ def main():
 
         # Desenha a posição que a entidade um segue.
         pygame.draw.circle(SCREEN, "yellow", random_position, 2)
+
+        pygame.draw.circle(SCREEN, "purple", entity_one.position, 300, 1)
+        pygame.draw.circle(SCREEN, "green", entity_one.position, 50, 1)
 
         pygame.display.flip()
 
