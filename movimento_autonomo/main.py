@@ -2,7 +2,7 @@ import pygame
 import random
 import time
 
-from movingentity import MovingEntity, SEEK, FLEE, ARRIVE, PURSUIT, EVADE
+from movingentity import MovingEntity, SEEK, FLEE, ARRIVE, PURSUIT, EVADE, WANDER
 
 def generate_random_position(WIDTH, HEIGHT):
     x = random.randrange(1, WIDTH - 1)
@@ -20,7 +20,9 @@ def main():
     CLOCK = pygame.time.Clock()
 
     entity_one = MovingEntity(WIDTH // 2, HEIGHT // 2, 1, 150, 100, SEEK)
+
     entity_two = MovingEntity(WIDTH // 3, HEIGHT // 3, 1, 150, 100, PURSUIT, entity_one)
+    
     entities = [entity_one, entity_two]
 
     random_position = generate_random_position(WIDTH, HEIGHT)

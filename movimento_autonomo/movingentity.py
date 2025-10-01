@@ -1,5 +1,6 @@
 import sys
 import pygame
+import random
 
 from abc import ABC, abstractmethod
 
@@ -54,13 +55,19 @@ class MovingEntity (BaseGameEntity):
 
         # Relativo aos estados da Entidade.
         self.state_machine = StateMachine(self, start_state)
-        self.state_permissions = {
+        self.state_permissions: dict = {
             "Seek"    : True,
             "Arrive"  : True,
             "Flee"    : True,
             "Pursuit" : True,
             "Evade"   : True,
         }
+
+        self.wander_radius:   float
+        self.wander_distance: float
+        self.wander_jitter:   float
+
+        self.max_prediction = 5
 
         # Relativo a movimentação da Entidade.
         self.position     = pygame.math.Vector2(x, y)
@@ -212,14 +219,14 @@ class Arrive (State):
         print(f"[DEBUG] {entity.ID}: SAINDO DO MODO DE CHEGADA.")
 
 
-class Pursuit(State):
+class Pursuit (State):
     def execute(self, entity: MovingEntity):
         if not entity.target_entity:
             return
 
         evader = entity.target_entity
-        to_evader = evader.position - entity.position
-        distance = to_evader.length()
+        direction = evader.position - entity.position
+        distance = direction.length()
 
         if distance < 50:
             entity.state_machine.change_state(ARRIVE)
@@ -227,20 +234,31 @@ class Pursuit(State):
         elif distance > 300: 
             entity.state_machine.change_state(SEEK)
             return
+        
+        speed = entity.velocity.length()
 
-        relative_speed = entity.velocity.length() + evader.velocity.length()
-        look_ahead_time = 0 if relative_speed < 1e-5 else distance / relative_speed
+        if speed <= distance / entity.max_prediction:
+            prediction = entity.max_prediction
+        else:
+            prediction = distance / speed
 
-        predicted_pos = evader.position + evader.velocity * look_ahead_time
-        entity.change_target(predicted_pos)
+        entity.target_position += entity.target_entity.velocity * prediction
 
-        desired_velocity = (predicted_pos - entity.position).normalize() * entity.max_speed
-        steering_force = desired_velocity - entity.velocity
+        entity.state_machine.change_state(SEEK)
 
-        if steering_force.length() > entity.max_force:
-            steering_force.scale_to_length(entity.max_force)
+        # relative_speed = entity.velocity.length() + evader.velocity.length()
+        # look_ahead_time = 0 if relative_speed < 1e-5 else distance / relative_speed
 
-        entity.apply_force(steering_force)
+        # predicted_pos = evader.position + evader.velocity * look_ahead_time
+        # entity.change_target(predicted_pos)
+
+        # desired_velocity = (predicted_pos - entity.position).normalize() * entity.max_speed
+        # steering_force = desired_velocity - entity.velocity
+
+        # if steering_force.length() > entity.max_force:
+        #     steering_force.scale_to_length(entity.max_force)
+
+        # entity.apply_force(steering_force)
 
     def enter(self, entity: MovingEntity):
         print(f"[DEBUG] {entity.ID}: ENTRANDO NO MODO DE PERSEGUIÇÃO.")
@@ -285,8 +303,28 @@ class Evade (State):
         print(f"[DEBUG] {entity.ID}: SAINDO DO MODO DE ESCAPE.")
 
 
+class Wander (State):
+    def execute(self, entity: MovingEntity):
+        wander_target = pygame.math.Vector2(random.random() * entity.wander_jitter, 
+                                            random.random() * entity.wander_jitter)
+        
+        wander_target.normalize_ip()
+        wander_target *= entity.wander_radius
+
+        target = wander_target + pygame.math.Vector2(entity.wander_distance, 0)
+
+        entity.target_position = target
+    
+    def enter(self, entity):
+        return super().enter()
+    
+    def exit(self, entity):
+        return super().exit()
+
+
 PURSUIT = Pursuit()
 ARRIVE = Arrive(deceleration=1)
+WANDER = Wander()
 EVADE = Evade()
 FLEE   = Flee()
 SEEK   = Seek()
