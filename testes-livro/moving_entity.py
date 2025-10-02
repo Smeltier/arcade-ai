@@ -48,14 +48,14 @@ class MovingEntity:
 
     def _limit_entity(self):
         if self.position.x > self.world_width:
-            self.position.x = self.world_width
+            self.position.x = 1
         elif self.position.x < 0:
-            self.position.x = 0
+            self.position.x = self.world_width - 1
 
         if self.position.y > self.world_heigth:
-            self.position.y = self.world_heigth
+            self.position.y = 1
         elif self.position.y < 0:
-            self.position.y = 0
+            self.position.y = self.world_heigth - 1
 
     def _apply_force(self, steering: SteeringOutput):
         if steering.linear.length_squared() > self.max_force * self.max_force:

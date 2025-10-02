@@ -1,7 +1,7 @@
 import pygame
 import random
 
-from objects.agente import Agent
+from agente import Agent
 import colisoes as cls
 
 def main():

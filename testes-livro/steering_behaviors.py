@@ -1,12 +1,12 @@
 from steering_output import SteeringOutput
 
 class Seek:
-    def __init__(self, character: 'MovingEntity', target: 'MovingEntity', max_acceleration):
+    def __init__(self, character: object, target: object, max_acceleration: float):
         self.character = character
         self.target = target
         self.max_aceleration = max_acceleration
 
-    def get_steering(self):
+    def get_steering(self: object) -> SteeringOutput:
         steering = SteeringOutput()
         if not self.target:
             return steering
@@ -14,15 +14,16 @@ class Seek:
         steering.linear = self.target.position - self.character.position
         steering.linear.normalize_ip()
         steering.linear *= self.max_aceleration
+
         return steering
     
 class Flee:
-    def __init__(self, character: 'MovingEntity', target: 'MovingEntity', max_acceleration):
+    def __init__(self, character: object, target: object, max_acceleration: float):
         self.character = character
         self.target = target
         self.max_aceleration = max_acceleration
 
-    def get_steering(self):
+    def get_steering(self) -> SteeringOutput:
         steering = SteeringOutput()
         if not self.target:
             return steering
@@ -30,10 +31,11 @@ class Flee:
         steering.linear = self.character.position - self.target.position
         steering.linear.normalize_ip()
         steering.linear *= self.max_aceleration
+
         return steering   
 
 class Arrive:
-    def __init__(self, character: 'MovingEntity', target: 'MovingEntity', max_speed, max_acceleration, slow_radius, target_radius, time_to_target=0.1):
+    def __init__(self, character: object, target: object, max_speed: float, max_acceleration: float, slow_radius: float, target_radius: float, time_to_target: float = 0.1):
         self.character = character
         self.target = target
         self.max_speed = max_speed
@@ -62,10 +64,11 @@ class Arrive:
 
         if steering.linear.length() > self.max_acceleration:
             steering.linear.scale_to_length(self.max_acceleration)
+
         return steering
     
 class Pursue(Seek):
-    def __init__(self, character: 'MovingEntity', target: 'MovingEntity', max_acceleration, max_prediction=1.0):
+    def __init__(self, character, target, max_acceleration, max_prediction=1.0):
         super().__init__(character, target, max_acceleration)
         self.max_prediction = max_prediction
 
@@ -88,10 +91,11 @@ class Pursue(Seek):
         steering.linear = predicted_position - self.character.position
         steering.linear.normalize_ip()
         steering.linear *= self.max_aceleration
+        
         return steering
     
 class Evade(Flee):
-    def __init__(self, character: 'MovingEntity', target: 'MovingEntity', max_acceleration, max_prediction=1.0):
+    def __init__(self, character, target, max_acceleration, max_prediction=1.0):
         super().__init__(character, target, max_acceleration)
         self.max_prediction = max_prediction
 

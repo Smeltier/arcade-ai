@@ -23,7 +23,7 @@ class ArriveState(State):
     def enter(self, entity):
         print(f"[DEBUG] {entity.ID} -> Arrive")
         entity.change_color("blue")
-        entity.arrive_behavior = Arrive(entity, entity.target, entity.max_speed, entity.max_acceleration, 50, 5)
+        entity.arrive_behavior = Arrive(entity, entity.target, entity.max_speed, entity.max_acceleration, 50, 20)
     
     def exit(self, entity):
         entity.arrive_behavior = None
