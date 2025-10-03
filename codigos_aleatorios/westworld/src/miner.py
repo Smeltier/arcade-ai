@@ -1,9 +1,11 @@
 import time
 
 from entity import BaseGameEntity
-from states import State, StateMachine, Telegram, Message
+from states import State, StateMachine, Telegram, Message, MESSAGE_DISPATCHER
 
 class Miner(BaseGameEntity):
+    wife_id: int
+    
     def __init__(self, name: str, gold_limit: int = 1):
         super().__init__()
 
@@ -46,8 +48,10 @@ class Miner(BaseGameEntity):
         return self.thirst > 5
 
     def handle_message(self, telegram: Telegram) -> bool:
-        if telegram.message == Message.HI_HONEY_IM_HOME:
-            print("")
+        if telegram.message == Message.STEW_READY:
+            self.state_machine.change_state(EAT_STEW)
+            return True
+        return False
 
 class MinerGlobalState(State):
     def execute(self, miner):
@@ -58,6 +62,9 @@ class MinerGlobalState(State):
 
     def exit(self, miner):
         pass
+
+    def on_message(self, telegram: Telegram) -> bool:
+        return False
 
 class EnterMineAndDigForNugget(State):
 
@@ -118,7 +125,7 @@ class QuenchThirst(State):
     def execute(self, miner):
         print(f"{miner.name} - {miner.ID}: Adoro beber essa bebida.")
         miner.thirst = 0
-        miner.gold_carried -= 2 # Custo da bebida.
+        miner.gold_carried = max(0, miner.gold_carried - 2) # Custo da bebida.
 
         miner.state_machine.change_state(ENTER_MINE_AND_DIG_FOR_NUGGET)
 
@@ -150,6 +157,8 @@ class GoHomeAndSleepTilRested(State):
             print(f"{miner.name} - {miner.ID}: Indo para Casa..")
             miner.change_location(self.location)
 
+            MESSAGE_DISPATCHER.dispatch_message(0, miner.ID, 1001, Message.HI_HONEY_IM_HOME)
+
     def exit(self, miner):
         print(f"{miner.name} - {miner.ID}: Saindo de Casa..")
 
@@ -171,6 +180,9 @@ class EatStew(State):
 
     def exit(self, miner: Miner):
         print(f"{miner.name} - {miner.ID}: Saindo de casa..")
+
+    def on_message(self, miner, telegram: Telegram) -> bool:
+        return False
     
 ENTER_MINE_AND_DIG_FOR_NUGGET = EnterMineAndDigForNugget()
 GO_HOME_AND_SLEEP_TIL_RESTED = GoHomeAndSleepTilRested()

@@ -2,65 +2,58 @@ import pygame
 import random
 import time
 
-from movingentity import MovingEntity, SEEK, FLEE, ARRIVE, PURSUIT, EVADE, WANDER
+from moving_entity import MovingEntity
+from states import Seek, Flee
 
-def generate_random_position(WIDTH, HEIGHT):
-    x = random.randrange(1, WIDTH - 1)
-    y = random.randrange(1, HEIGHT - 1)
-    return pygame.math.Vector2(x, y)
+pygame.init()
 
-def main():
-    pygame.init()
+game_title: str = "Steering Behaviors"
+pygame.display.set_caption(game_title)
 
-    game_title: str = "Movimento Autônomo"
-    pygame.display.set_caption(game_title)
+WIDTH, HEIGTH = 800, 800
+SCREEN = pygame.display.set_mode((WIDTH, HEIGTH))
+CLOCK = pygame.time.Clock()
 
-    WIDTH, HEIGHT = 800, 800
-    SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
-    CLOCK = pygame.time.Clock()
+target = MovingEntity(500, 500, max_speed=100, max_force=100, mass=1, max_acceleration=200)
+timmer = time.time() + 3
 
-    entity_one = MovingEntity(WIDTH // 2, HEIGHT // 2, 1, 150, 100, SEEK)
+player_one = MovingEntity(100, 100, max_speed=200, max_force=300, max_acceleration=200, mass=1)
+player_one.change_world_resolution(WIDTH, HEIGTH)
 
-    entity_two = MovingEntity(WIDTH // 3, HEIGHT // 3, 1, 150, 100, PURSUIT, entity_one)
-    
-    entities = [entity_one, entity_two]
+player_two = MovingEntity(400, 300, max_speed=200, max_force=300, max_acceleration=200, mass=1)
+player_two.change_world_resolution(WIDTH, HEIGTH)
 
-    random_position = generate_random_position(WIDTH, HEIGHT)
-    time_stamp = time.time() + 3
+player_one.target = target
+player_two.target = player_one
 
-    running = True
-    while running:
-        delta_time = CLOCK.tick(60) / 1000.0
-        
-        SCREEN.fill("black")
+target.state_machine.change_state(Flee(target, player_one))
+player_one.state_machine.change_state(Seek(player_one, target))
+player_two.state_machine.change_state(Seek(player_two, player_one))
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
+running = True
+while running:
+    delta_time = CLOCK.tick(60) / 1000.0
 
-        if time.time() >= time_stamp:
-            random_position = generate_random_position(WIDTH, HEIGHT)
-            time_stamp = time.time() + 2
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
 
-        entity_one.change_target(random_position)
+    if time.time() >= timmer:
+        target.position = pygame.Vector2(random.randint(1, WIDTH - 1), random.randint(1, HEIGTH - 1))
+        timmer = time.time() + 3
 
-        entity_two.change_target(entity_one.position)
-        entity_two.change_target_speed(entity_one.velocity)
-        
-        for entity in entities:
-            entity.update(delta_time)
-            entity.draw(SCREEN)
-            entity.limit_the_entity(WIDTH, HEIGHT)
+    player_one.delta_time = delta_time
+    player_two.delta_time = delta_time
 
-        # Desenha a posição que a entidade um segue.
-        pygame.draw.circle(SCREEN, "yellow", random_position, 2)
+    player_one.update()
+    player_two.update()
 
-        pygame.draw.circle(SCREEN, "purple", entity_one.position, 300, 1)
-        pygame.draw.circle(SCREEN, "green", entity_one.position, 50, 1)
+    SCREEN.fill((30, 30, 30))
 
-        pygame.display.flip()
+    pygame.draw.circle(SCREEN, player_one.color, player_one.position, 8)  
+    pygame.draw.circle(SCREEN, player_two.color, player_two.position, 8)  
+    pygame.draw.circle(SCREEN, target.color, target.position, 2)  
 
-    pygame.quit()
+    pygame.display.flip()
 
-if __name__ == "__main__":
-    main()
+pygame.quit()
