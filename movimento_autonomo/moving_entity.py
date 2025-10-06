@@ -1,6 +1,14 @@
 import pygame
 from state_machine import StateMachine
-from states import SteeringOutput
+from states import SteeringOutput, KinematicSteeringOutput
+
+# class SteerigParams:
+#     def __init__(self, time_to_target=0.5, slow_radius=20, detection_radius=50, max_prediction=1.0, max_rotation=50):
+#         self.time_to_target = time_to_target
+#         self.slow_radius = slow_radius
+#         self.detection_radius = detection_radius
+#         self.max_prediction = max_prediction
+#         self.max_rotation = max_rotation
 
 class MovingEntity:
     _next_ID = 0
@@ -12,24 +20,22 @@ class MovingEntity:
         self.position = pygame.math.Vector2(x, y)
         self.velocity = pygame.math.Vector2(0, 0)
         self.acceleration = pygame.math.Vector2(0, 0)
+        self.orientation = 0.0
         self.mass = mass
         self.max_speed = max_speed
         self.max_force = max_force
         self.max_acceleration = max_acceleration
         self.delta_time = 0.1
-        
         self.target: MovingEntity = None
         self.time_to_target = 0.5
         self.distance = 0
-
         self.slow_radius = 20
         self.detection_radius = 50
         self.max_prediction = 1.0
-        
+        self.max_rotation = 50
         self.world_width = 0
         self.world_heigth = 0
         self.color = pygame.Color("white")
-
         self.start_state = start_state
         self.state_machine = StateMachine(self, self.start_state)
 
@@ -73,6 +79,15 @@ class MovingEntity:
 
         self.position += self.velocity * delta_time
         self.acceleration *= 0
+
+    def apply_kinematic_steering(self, steering: KinematicSteeringOutput, delta_time):
+        self.orientation += steering.rotation * delta_time
+
+        self.velocity = steering.velocity
+        if self.velocity.length() > self.max_speed:
+            self.velocity.scale_to_length(self.max_speed)
+
+        self.position += self.velocity * delta_time
 
     def change_color(self, color):
         self.color = pygame.Color(color)
