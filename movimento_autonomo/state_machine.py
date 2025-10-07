@@ -1,5 +1,5 @@
 from states import State
-
+ 
 class StateMachine:
     def __init__(self, owner, start_state=None):
         self.owner = owner

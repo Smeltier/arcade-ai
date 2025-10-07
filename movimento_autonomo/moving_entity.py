@@ -1,14 +1,8 @@
-import pygame
+import math
+import pygame 
+
 from state_machine import StateMachine
 from states import SteeringOutput, KinematicSteeringOutput
-
-# class SteerigParams:
-#     def __init__(self, time_to_target=0.5, slow_radius=20, detection_radius=50, max_prediction=1.0, max_rotation=50):
-#         self.time_to_target = time_to_target
-#         self.slow_radius = slow_radius
-#         self.detection_radius = detection_radius
-#         self.max_prediction = max_prediction
-#         self.max_rotation = max_rotation
 
 class MovingEntity:
     _next_ID = 0
@@ -20,32 +14,39 @@ class MovingEntity:
         self.position = pygame.math.Vector2(x, y)
         self.velocity = pygame.math.Vector2(0, 0)
         self.acceleration = pygame.math.Vector2(0, 0)
-        self.orientation = 0.0
         self.mass = mass
+
+        self.target: MovingEntity = self
+        self.orientation = 0.0
+
+        self.rotation = 1
+        self.time_to_target = 0.25
+        self.distance = 0
+
+        self.target_radius = 2.0
+        self.slow_radius = 20
+        self.detection_radius = 50
+
         self.max_speed = max_speed
         self.max_force = max_force
         self.max_acceleration = max_acceleration
-        self.delta_time = 0.1
-        self.target: MovingEntity = None
-        self.time_to_target = 0.5
-        self.distance = 0
-        self.slow_radius = 20
-        self.detection_radius = 50
         self.max_prediction = 1.0
         self.max_rotation = 50
-        self.world_width = 0
-        self.world_heigth = 0
-        self.color = pygame.Color("white")
+        self.max_angular_acceleration = 50
+
+        self.wander_offset = 2.0
+        self.wander_radius = 1.0
+        self.wander_rate = 0.4
+        self.wander_orientation = 1 
+
         self.start_state = start_state
         self.state_machine = StateMachine(self, self.start_state)
 
-    def update(self):
-        self._update_distance()
-        
-        if self.state_machine:
-            self.state_machine.update()
-        
-        self._limit_entity()
+        self.color = pygame.Color("white")
+
+        self.world_width = 0
+        self.world_heigth = 0
+        self.delta_time = 0.1
 
     def _update_distance(self):
         if self.target:
@@ -69,16 +70,25 @@ class MovingEntity:
             
         self.acceleration += steering.linear / self.mass
 
+    def update(self):
+        self._update_distance()
+        
+        if self.state_machine:
+            self.state_machine.update()
+        
+        self._limit_entity()
+
     def apply_steering(self, steering: SteeringOutput, delta_time):
         self._apply_force(steering)
 
-        self.velocity += self.acceleration * delta_time
+        self.position += self.velocity * delta_time
+        self.orientation += self.rotation * delta_time
 
+        self.orientation += steering.angular * delta_time
+
+        self.velocity += steering.linear * delta_time
         if self.velocity.length() > self.max_speed:
             self.velocity.scale_to_length(self.max_speed)
-
-        self.position += self.velocity * delta_time
-        self.acceleration *= 0
 
     def apply_kinematic_steering(self, steering: KinematicSteeringOutput, delta_time):
         self.orientation += steering.rotation * delta_time
@@ -89,9 +99,16 @@ class MovingEntity:
 
         self.position += self.velocity * delta_time
 
-    def change_color(self, color):
+    def change_color(self, color) -> None:
         self.color = pygame.Color(color)
 
-    def change_world_resolution(self, width: float, heigth: float):
+    def change_world_resolution(self, width: float, heigth: float) -> None:
         self.world_width = width
         self.world_heigth = heigth
+
+    # TODO - Verificar a implementação
+    def new_orientation(self, velocity) -> float:
+        if velocity.length() <= 0:
+            return self.orientation
+
+        return math.atan2(-velocity.x, velocity.y)

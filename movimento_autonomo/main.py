@@ -1,9 +1,9 @@
 import pygame
-import random
+import random 
 import time
 
 from moving_entity import MovingEntity
-from states import Seek, Flee, KinematicWander
+from states import Seek, Flee, Wander
 
 pygame.init()
 
@@ -27,7 +27,7 @@ player_two.change_world_resolution(WIDTH, HEIGTH)
 player_two.target = player_one
 
 # target.state_machine.change_state(Flee(target, player_one))
-player_one.state_machine.change_state(KinematicWander(player_one))
+player_one.state_machine.change_state(Wander(player_one, None))
 player_two.state_machine.change_state(Seek(player_two, player_one))
 
 running = True
