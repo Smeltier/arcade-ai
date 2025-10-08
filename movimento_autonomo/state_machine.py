@@ -1,4 +1,4 @@
-from states import State
+from state import State
  
 class StateMachine:
     def __init__(self, owner, start_state=None):

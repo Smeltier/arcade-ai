@@ -2,7 +2,7 @@ import math
 import pygame 
 
 from state_machine import StateMachine
-from states import SteeringOutput, KinematicSteeringOutput
+from steering_output import SteeringOutput, KinematicSteeringOutput
 
 class MovingEntity:
     _next_ID = 0
@@ -18,6 +18,11 @@ class MovingEntity:
 
         self.target: MovingEntity = self
         self.orientation = 0.0
+
+        self.target_list = []
+        self.target_list.append(self.target)
+        self.threshold = 100
+        self.decay_coefficient = 100000
 
         self.rotation = 1
         self.time_to_target = 0.25
@@ -45,7 +50,7 @@ class MovingEntity:
         self.color = pygame.Color("white")
 
         self.world_width = 0
-        self.world_heigth = 0
+        self.world_height = 0
         self.delta_time = 0.1
 
     def _update_distance(self):
@@ -59,10 +64,10 @@ class MovingEntity:
         elif self.position.x < 0:
             self.position.x = self.world_width - 1
 
-        if self.position.y > self.world_heigth:
+        if self.position.y > self.world_height:
             self.position.y = 1
         elif self.position.y < 0:
-            self.position.y = self.world_heigth - 1
+            self.position.y = self.world_height - 1
 
     def _apply_force(self, steering: SteeringOutput):
         if steering.linear.length_squared() > self.max_force * self.max_force:
@@ -81,14 +86,17 @@ class MovingEntity:
     def apply_steering(self, steering: SteeringOutput, delta_time):
         self._apply_force(steering)
 
-        self.position += self.velocity * delta_time
-        self.orientation += self.rotation * delta_time
-
-        self.orientation += steering.angular * delta_time
-
         self.velocity += steering.linear * delta_time
+
         if self.velocity.length() > self.max_speed:
             self.velocity.scale_to_length(self.max_speed)
+
+        self.position += self.velocity * delta_time
+
+        self.orientation += self.rotation * delta_time
+        self.orientation += steering.angular * delta_time
+
+        self.acceleration *= 0
 
     def apply_kinematic_steering(self, steering: KinematicSteeringOutput, delta_time):
         self.orientation += steering.rotation * delta_time
@@ -104,7 +112,7 @@ class MovingEntity:
 
     def change_world_resolution(self, width: float, heigth: float) -> None:
         self.world_width = width
-        self.world_heigth = heigth
+        self.world_height = heigth
 
     # TODO - Verificar a implementação
     def new_orientation(self, velocity) -> float:
@@ -112,3 +120,6 @@ class MovingEntity:
             return self.orientation
 
         return math.atan2(-velocity.x, velocity.y)
+    
+    def add_target(self, new_target):
+        self.target_list.append(new_target)
