@@ -31,6 +31,7 @@ class MovingEntity:
         self.target_radius = 2.0
         self.slow_radius = 20
         self.detection_radius = 50
+        self.radius = 20
 
         self.max_speed = max_speed
         self.max_force = max_force
@@ -123,3 +124,15 @@ class MovingEntity:
     
     def add_target(self, new_target):
         self.target_list.append(new_target)
+
+    def draw(self, SCREEN):
+        if self.velocity.length() > 0:
+            direction = self.velocity.normalize()        
+            line_length = 10  
+            line_end = self.position + direction * line_length
+            pygame.draw.line(SCREEN, "white",  
+                            (int(self.position.x), int(self.position.y)),
+                            (int(line_end.x), int(line_end.y)), 2) 
+
+        pygame.draw.circle(SCREEN, self.color, 
+                           (int(self.position.x), int(self.position.y)), 8)
