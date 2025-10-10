@@ -4,11 +4,7 @@ import random
 
 from abc import ABC, abstractmethod
 
-from steering_output import SteeringOutput
-
-def map_to_range(rotation):
-    return (rotation + math.pi) % (2 * math.pi) - math.pi
-
+from outputs import SteeringOutput
 
 class State(ABC):
     @abstractmethod 

@@ -3,7 +3,7 @@ import math
 import random
 
 from state import State
-from steering_output import KinematicSteeringOutput
+from movimento_autonomo.outputs import KinematicSteeringOutput
 
 def map_to_range(rotation):
     return (rotation + math.pi) % (2 * math.pi) - math.pi

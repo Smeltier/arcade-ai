@@ -3,7 +3,8 @@ import math
 import random
 
 from state import State
-from steering_output import SteeringOutput
+from movimento_autonomo.outputs import SteeringOutput, Collision
+from collision_detector import CollisionDetector
 
 def map_to_range(rotation):
     return (rotation + math.pi) % (2 * math.pi) - math.pi
@@ -17,13 +18,20 @@ class Arrive(State):
         super().__init__()
 
         self.character = character
+        self.max_speed = self.character.limits.max_speed
+        self.max_acceleration = self.character.limits.max_acceleration
+        self.slow_radius = 0.1
+        self.target_radius = 0.1
+        self.time_to_target = 0.1
         self.target = target
+        self.direction = target.position - character.position
+        self.distance = self.direction.length()
 
     def execute(self):
         steering = self.get_steering()
         self.character.apply_steering(steering, self.character.delta_time)
 
-        if self.character.distance > 50:
+        if self.distance > 50:
             self.character.state_machine.change_state(Pursue(self.character, self.target))
 
     def get_steering(self) -> SteeringOutput:
@@ -32,27 +40,25 @@ class Arrive(State):
         if not self.target:
             return steering
             
-        direction = self.target.position - self.character.position
-        distance = direction.length()
+        self.direction = self.target.position - self.character.position
+        self.distance = self.direction.length()
 
-        if distance < self.character.target_radius:
+        if self.distance < self.target_radius:
             return SteeringOutput()
         
-        if distance > self.character.slow_radius:
-            target_speed = self.character.max_speed
-
+        if self.distance > self.slow_radius:
+            target_speed = self.max_speed
         else:
-            target_speed = self.character.max_speed * distance / self.character.slow_radius
+            target_speed = self.max_speed * self.distance / self.slow_radius
 
-        target_velocity = direction
-        target_velocity.normalize_ip()
+        target_velocity = self.direction.normalize()
         target_velocity *= target_speed
 
         steering.linear = target_velocity - self.character.velocity
-        steering.linear /= self.character.time_to_target
+        steering.linear /= self.time_to_target
 
-        if steering.linear.length() > self.character.max_acceleration:
-            steering.linear.scale_to_length(self.character.max_acceleration)
+        if steering.linear.length() > self.max_acceleration:
+            steering.linear.scale_to_length(self.max_acceleration)
 
         steering.angular = 0
         return steering
@@ -548,6 +554,35 @@ class CollisionAvoidance(State):
     def enter(self):
         print(f"[DEBUG] {self.character.ID} -> CollisionAvoidance")
         self.character.change_color("gray")
+    
+    def exit(self):
+        return super().exit()
+    
+class ObstacleAvoidance(Seek):
+    def __init__(self, character, target):
+        super().__init__(character, target)
+
+        self.collision_detector = CollisionDetector()
+
+    def execute(self):
+        steering = self.get_steering()
+        self.character.apply_steering(steering, self.character.delta_time)
+    
+    def get_steering(self):
+        ray_vector = self.character.velocity
+        ray_vector.normalize_ip()
+        ray_vector *= self.character.collision_ray
+
+        collision = self.collision_detector.get_collision(self.character.position, ray_vector)
+
+        if not collision: return SteeringOutput()
+
+        self.target = collision.position + collision.normal * self.character.avoid_distance
+
+        return super().get_steering()
+    
+    def enter(self):
+        return super().enter()
     
     def exit(self):
         return super().exit()
