@@ -3,7 +3,7 @@ import math
 import random
 
 from state import State
-from movimento_autonomo.outputs import SteeringOutput, Collision
+from outputs import SteeringOutput, Collision
 from collision_detector import CollisionDetector
 
 def map_to_range(rotation):
@@ -18,21 +18,16 @@ class Arrive(State):
         super().__init__()
 
         self.character = character
-        self.max_speed = self.character.limits.max_speed
-        self.max_acceleration = self.character.limits.max_acceleration
-        self.slow_radius = 0.1
-        self.target_radius = 0.1
-        self.time_to_target = 0.1
         self.target = target
-        self.direction = target.position - character.position
-        self.distance = self.direction.length()
+        self.max_speed = character.limits.max_speed
+        self.max_acceleration = character.limits.max_acceleration
+        self.slow_radius = character.behavior_threshold.slow_radius
+        self.target_radius = character.behavior_threshold.target_radius
+        self.time_to_target = character.behavior_threshold.time_to_target        
 
     def execute(self):
         steering = self.get_steering()
         self.character.apply_steering(steering, self.character.delta_time)
-
-        if self.distance > 50:
-            self.character.state_machine.change_state(Pursue(self.character, self.target))
 
     def get_steering(self) -> SteeringOutput:
         steering = SteeringOutput()
@@ -76,13 +71,11 @@ class Seek(State):
 
         self.character = character
         self.target = target
+        self.max_acceleration = character.limits.max_acceleration
 
     def execute(self):
         steering = self.get_steering()
         self.character.apply_steering(steering, self.character.delta_time)
-
-        if self.character.distance <= 200:
-            self.character.state_machine.change_state(Pursue(self.character, self.target))
 
     def get_steering(self):
         steering = SteeringOutput()
@@ -90,9 +83,8 @@ class Seek(State):
         if not self.target:
             return steering
 
-        steering.linear = self.target.position - self.character.position
-        steering.linear.normalize_ip()
-        steering.linear *= self.character.max_acceleration
+        steering.linear = (self.target.position - self.character.position).normalize()
+        steering.linear *= self.max_acceleration
 
         steering.angular = 0
         return steering  
@@ -110,13 +102,11 @@ class Flee(State):
 
         self.character = character
         self.target = target
+        self.max_acceleration = character.limits.max_acceleration
 
     def execute(self):
         steering = self.get_steering()
         self.character.apply_steering(steering, self.character.delta_time)
-
-        if self.character.distance <= 200:
-            self.character.state_machine.change_state(Evade(self.character, self.target)) 
 
     def get_steering(self):
         steering = SteeringOutput()
@@ -124,9 +114,8 @@ class Flee(State):
         if not self.target:
             return steering
 
-        steering.linear = self.character.position - self.target.position
-        steering.linear.normalize_ip()
-        steering.linear *= self.character.max_acceleration
+        steering.linear = (self.character.position - self.target.position).normalize()
+        steering.linear *= self.max_acceleration
 
         steering.angular = 0
         return steering 
@@ -142,19 +131,15 @@ class Pursue(Seek):
     def __init__(self, character, target):
         super().__init__(character, target)
 
+        self.max_prediction = self.character.limits.max_prediction
+
     def execute(self):
         steering = self.get_steering()
         self.character.apply_steering(steering, self.character.delta_time)
 
-        if self.character.distance > 200:
-            self.character.state_machine.change_state(Seek(self.character, self.target))
-
-        elif self.character.distance <= 50:
-            self.character.state_machine.change_state(Arrive(self.character, self.target))
-
-    # G: Repetição de código, talvez tenha uma forma melhor de fazer isso.
     def get_steering(self):
         steering = SteeringOutput()
+
         if not self.target:
             return steering
 
@@ -162,17 +147,16 @@ class Pursue(Seek):
         distance = direction.length()
         speed = self.character.velocity.length()
 
-        if speed <= distance / self.character.max_prediction:
-            prediction = self.character.max_prediction
+        if speed <= distance / self.max_prediction:
+            prediction = self.max_prediction
 
         else:
             prediction = distance / speed
 
         predicted_position = self.target.position + self.target.velocity * prediction
 
-        steering.linear = predicted_position - self.character.position
-        steering.linear.normalize_ip()
-        steering.linear *= self.character.max_acceleration
+        steering.linear = (predicted_position - self.character.position).normalize()
+        steering.linear *= self.max_acceleration
 
         steering.angular = 0
         return steering
@@ -188,12 +172,11 @@ class Evade(Flee):
     def __init__(self, character, target):
         super().__init__(character, target)
 
+        self.max_prediction = self.character.limits.max_prediction
+
     def execute(self):
         steering = self.get_steering()
         self.character.apply_steering(steering, self.character.delta_time)
-
-        if self.character.distance > 200:
-            self.character.state_machine.change_state(Flee(self.character, self.target)) 
 
     def get_steering(self):
         steering = SteeringOutput()
@@ -201,20 +184,19 @@ class Evade(Flee):
             return steering
 
         direction = self.target.position - self.character.position
-        distance = direction.length()
+        self.distance = direction.length()
         speed = self.character.velocity.length()
 
-        if speed <= distance / self.character.max_prediction:
-            prediction = self.character.max_prediction
+        if speed <= self.distance / self.max_prediction:
+            prediction = self.max_prediction
 
         else:
-            prediction = distance / speed
+            prediction = self.distance / speed
 
         predicted_position = self.target.position + self.target.velocity * prediction
 
-        steering.linear = predicted_position - self.character.position
-        steering.linear.normalize_ip()
-        steering.linear *= self.character.max_acceleration
+        steering.linear = (self.character.position - predicted_position).normalize()
+        steering.linear *= self.max_acceleration
 
         steering.angular = 0
         return steering
@@ -232,6 +214,12 @@ class Align(State):
 
         self.character = character
         self.target = target
+        self.max_rotation = character.limits.max_rotation
+        self.target_radius = character.behavior_threshold.target_radius
+        self.rotation = character.rotation
+        self.slow_radius = character.behavior_threshold.slow_radius
+        self.time_to_target = character.behavior_threshold.time_to_target
+        self.max_angular_acceleration = character.limits.max_angular_acceleration
 
     def execute(self):
         return super().execute()
@@ -243,25 +231,25 @@ class Align(State):
         rotation = map_to_range(rotation)
         rotation_size = abs(rotation)
 
-        if rotation_size < self.character.target_radius:
+        if rotation_size < self.target_radius:
             return SteeringOutput()
         
-        if rotation_size > self.character.slow_radius:
-            target_rotation = self.character.max_rotation
+        if rotation_size > self.slow_radius:
+            target_rotation = self.max_rotation
 
         else:
-            target_rotation = self.character.max_rotation * rotation_size / self.character.slow_radius
+            target_rotation = self.max_rotation * rotation_size / self.slow_radius
 
         target_rotation *= rotation / rotation_size
 
-        steering.angular = target_rotation - self.character.rotation
-        steering.angular /= self.character.time_to_target
+        steering.angular = target_rotation - self.rotation
+        steering.angular /= self.time_to_target
 
         angular_acceleration = abs(steering.angular)
 
-        if angular_acceleration > self.character.max_angular_acceleration:
+        if angular_acceleration > self.max_angular_acceleration:
             steering.angular /= angular_acceleration
-            steering.angular *= self.character.max_angular_acceleration
+            steering.angular *= self.max_angular_acceleration
 
         steering.linear = pygame.math.Vector2(0,0)
         return steering
@@ -310,24 +298,27 @@ class Wander(Face):
     def __init__(self, character, target) -> None:
         super().__init__(character, target)
 
-        self.character = character
-        self.target = target
+        self.max_acceleration = character.limits.max_acceleration
+        self.wander_offset = character.wander_threshold.wander_offset
+        self.wander_radius = character.wander_threshold.wander_radius
+        self.wander_orientation = character.wander_threshold.wander_orientation
+        self.wander_rate = character.wander_threshold.wander_rate
 
     def execute(self):
         steering = self.get_steering()
         self.character.apply_steering(steering, self.character.delta_time)
     
     def get_steering(self) -> SteeringOutput:
-        self.character.wander_orientation += random.uniform(-1.0, 1.0) * self.character.wander_rate
+        self.wander_orientation += random.uniform(-1.0, 1.0) * self.wander_rate
 
-        target_orientation = self.character.wander_orientation + self.character.orientation
+        target_orientation = self.wander_orientation + self.character.orientation
 
         orientation_vector = pygame.math.Vector2(math.cos(self.character.orientation), math.sin(self.character.orientation))
         target_orientation_vector = pygame.math.Vector2(math.cos(target_orientation), math.sin(target_orientation))
         
-        circle_center = self.character.position + self.character.wander_offset * orientation_vector
+        circle_center = self.character.position + self.wander_offset * orientation_vector
 
-        target_position = circle_center + self.character.wander_radius * target_orientation_vector
+        target_position = circle_center + self.wander_radius * target_orientation_vector
 
         old_target = self.target
 
@@ -338,7 +329,8 @@ class Wander(Face):
         steering = super().get_steering()
         self.target = old_target
 
-        steering.linear = self.character.max_acceleration * orientation_vector
+        wander_force = orientation_vector * self.max_acceleration
+        steering.linear += wander_force
 
         return steering
     
@@ -403,6 +395,10 @@ class Separation(State):
         super().__init__()
 
         self.character = character
+        self.target_list = character.world.entities_list
+        self.threshold = character.behavior_threshold.threshold
+        self.decay_coefficient = character.behavior_threshold.decay_coefficient
+        self.max_acceleration = character.limits.max_acceleration
 
     def execute(self):
         steering = self.get_steering()
@@ -411,7 +407,7 @@ class Separation(State):
     def get_steering(self) -> SteeringOutput:
         steering = SteeringOutput()
 
-        for target in self.character.target_list:
+        for target in self.target_list:
 
             if target == self.character:
                 continue
@@ -419,19 +415,19 @@ class Separation(State):
             direction = self.character.position - target.position
             distance = direction.length() - 16
 
-            if distance == 0 or distance >= self.character.threshold:
+            if distance == 0 or distance >= self.threshold:
                 continue
 
-            strength = min(self.character.decay_coefficient * (distance * distance), self.character.max_acceleration)
+            strength = min(self.decay_coefficient * (distance * distance), self.max_acceleration)
 
             entity_size = pygame.math.Vector2(0, 8)
 
-            direction.normalize()
+            direction.normalize_ip()
             
             steering.linear += strength * direction + entity_size
 
-        if steering.linear.length() > self.character.max_acceleration:
-            steering.linear.scale_to_length(self.character.max_acceleration)
+        if steering.linear.length() > self.max_acceleration:
+            steering.linear.scale_to_length(self.max_acceleration)
 
         if steering.linear.length_squared() == 0:
             self.character.velocity = pygame.math.Vector2(0, 0)
@@ -450,6 +446,10 @@ class Attraction(State):
         super().__init__()
 
         self.character = character
+        self.target_list = character.world.entities_list
+        self.threshold = character.behavior_threshold.threshold
+        self.decay_coefficient = character.behavior_threshold.decay_coefficient
+        self.max_acceleration = character.limits.max_acceleration
 
     def execute(self):
         steering = self.get_steering()
@@ -458,7 +458,7 @@ class Attraction(State):
     def get_steering(self) -> SteeringOutput:
         steering = SteeringOutput()
 
-        for target in self.character.target_list:
+        for target in self.target_list:
 
             if target == self.character:
                 continue
@@ -466,19 +466,19 @@ class Attraction(State):
             direction = target.position - self.character.position
             distance = direction.length() - 16
 
-            if distance == 0 or distance >= self.character.threshold:
+            if distance == 0 or distance >= self.threshold:
                 continue
 
-            strength = min(self.character.decay_coefficient * (distance * distance), self.character.max_acceleration)
+            strength = min(self.decay_coefficient * (distance * distance), self.max_acceleration)
 
             entity_size = pygame.math.Vector2(0, 8)
 
-            direction.normalize()
+            direction.normalize_ip()
             
             steering.linear += strength * direction + entity_size
 
-        if steering.linear.length() > self.character.max_acceleration:
-            steering.linear.scale_to_length(self.character.max_acceleration)
+        if steering.linear.length() > self.max_acceleration:
+            steering.linear.scale_to_length(self.max_acceleration)
 
         if steering.linear.length_squared() == 0:
             self.character.velocity = pygame.math.Vector2(0, 0)
