@@ -3,7 +3,7 @@ import math
 import random
 
 from state import State
-from outputs import SteeringOutput, Collision
+from outputs import SteeringOutput, Collision, BehaviorAndWeight
 from collision_detector import CollisionDetector
 
 def map_to_range(rotation):
@@ -351,7 +351,10 @@ class LookWhereYoureGoing(Align):
         return super().execute()
     
     def get_steering(self) -> SteeringOutput:
-        return super().get_steering()
+        if self.character.velocity.length() == 0:
+            return SteeringOutput()
+            
+        return SteeringOutput()
 
     def enter(self):
         return super().enter()
@@ -540,10 +543,10 @@ class CollisionAvoidance(State):
         if not first_target:
             return SteeringOutput()
         
-        if first_min_separation <= 0 or first_distance < 2 * self.character.radius:
+        if first_min_separation <= 0 or first_distance < 2 * self.character.radius: # type: ignore
             relative_position = first_target.position - self.character.position
         else:
-            relative_position = first_relative_position + first_relative_velocity * shortest_time
+            relative_position = first_relative_position + first_relative_velocity * shortest_time # type: ignore
 
         relative_position.normalize_ip()
         steering.linear = relative_position * self.character.max_acceleration
@@ -586,3 +589,34 @@ class ObstacleAvoidance(Seek):
     
     def exit(self):
         return super().exit()
+    
+
+class BlendedSteering(State):
+    def __init__(self, character, behaviors: list[BehaviorAndWeight]) -> None:
+        self.behaviors: list = behaviors
+        self.character = character
+        self.max_acceleration = character.limits.max_acceleration
+        self.max_rotation = character.limits.max_rotation
+
+    def execute(self):
+        steering = self.get_steering()
+        self.character.apply_steering(steering, self.character.delta_time)
+    
+    def get_steering(self) -> SteeringOutput:
+        steering = SteeringOutput()
+
+        for behavior in self.behaviors:
+            steering += behavior.weight * behavior.behavior.get_steering()
+
+        if steering.linear.length() > self.max_acceleration:
+            steering.linear.scale_to_length(self.max_acceleration)
+
+        steering.angular = max(steering.angular, self.max_rotation)
+
+        return steering
+    
+    def enter(self):
+        print(f"[DEBUG] {self.character.ID} -> BlendedSteering")
+        self.character.change_color("white")
+    
+    def exit(self): pass
