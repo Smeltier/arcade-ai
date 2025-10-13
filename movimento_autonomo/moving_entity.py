@@ -49,21 +49,15 @@ class MovingEntity (BaseGameEntity):
         self._limit_entity()
 
     def apply_steering(self, steering: SteeringOutput, delta_time) -> None:
-        max_speed = self.limits.max_speed
-
-        self._apply_force(steering)
-
         self.velocity += steering.linear * delta_time
 
-        if self.velocity.length() > max_speed:
-            self.velocity.scale_to_length(max_speed)
+        if self.velocity.length() > self.limits.max_speed:
+            self.velocity.scale_to_length(self.limits.max_speed)
 
         self.position += self.velocity * delta_time
-
-        self.orientation += self.rotation * delta_time
         self.orientation += steering.angular * delta_time
 
-        self.acceleration *= 0
+        self.acceleration = pygame.Vector2(0,0)
 
     def apply_kinematic_steering(self, steering: KinematicSteeringOutput, delta_time) -> None:
         max_speed = self.limits.max_speed

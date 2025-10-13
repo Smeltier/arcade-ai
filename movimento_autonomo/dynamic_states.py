@@ -83,7 +83,8 @@ class Seek(State):
         if not self.target:
             return steering
 
-        steering.linear = (self.target.position - self.character.position).normalize()
+        steering.linear = self.target.position - self.character.position
+        steering.linear.normalize_ip()
         steering.linear *= self.max_acceleration
 
         steering.angular = 0
@@ -606,12 +607,14 @@ class BlendedSteering(State):
         steering = SteeringOutput()
 
         for behavior in self.behaviors:
-            steering += behavior.weight * behavior.behavior.get_steering()
+            behavior_steering = behavior.behavior.get_steering()
+            steering.linear += (behavior_steering.linear * behavior.weight)
+            steering.angular += (behavior_steering.angular * behavior.weight)
 
         if steering.linear.length() > self.max_acceleration:
             steering.linear.scale_to_length(self.max_acceleration)
 
-        steering.angular = max(steering.angular, self.max_rotation)
+        steering.angular = max(min(steering.angular, self.max_rotation), -self.max_rotation)
 
         return steering
     
