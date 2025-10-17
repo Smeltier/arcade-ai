@@ -608,7 +608,7 @@ class BlendedSteering(State):
 
         for behavior in self.behaviors:
             behavior_steering = behavior.behavior.get_steering()
-            steering.linear += (behavior_steering.linear * behavior.weight)
+            steering.linear  += (behavior_steering.linear * behavior.weight)
             steering.angular += (behavior_steering.angular * behavior.weight)
 
         if steering.linear.length() > self.max_acceleration:

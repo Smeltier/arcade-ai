@@ -28,16 +28,13 @@ class MovingEntity (BaseGameEntity):
         self.mass = mass
         self.orientation = 0.0
         self.rotation = 1
-
         self.world: World = world
         self.limits: Limits = limits
         self.wander_threshold: WanderThresholds | None = wander_threshold
         self.behavior_threshold: BehaviorThresholds | None = behavior_threshold
         self.delta_time = 0.1
-
         self.start_state = start_state
         self.state_machine = StateMachine(self, start_state)
-
         self.color = color
 
     def update(self, delta_time) -> None:
