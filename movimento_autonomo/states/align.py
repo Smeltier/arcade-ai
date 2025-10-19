@@ -17,8 +17,7 @@ class Align(State):
         self.time_to_target = character.time_to_target
         self.max_angular_acceleration = character.max_angular_acceleration
 
-    def execute(self):
-        return super().execute()
+    def execute(self): pass
     
     def get_steering(self) -> SteeringOutput:
         steering = SteeringOutput()

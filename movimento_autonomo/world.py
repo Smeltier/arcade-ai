@@ -14,11 +14,11 @@ class World:
 
         self.entities_list.append(new_entity)
 
-    def remove_entity(self, remove_entity):
-        if remove_entity is None: return
+    def remove_entity(self, entity):
+        if entity is None: return
 
         for iterator, entity,  in enumerate(self.entities_list):
-            if remove_entity is entity:
+            if entity is entity:
                 self.entities_list.pop(iterator)
 
     def update(self, delta_time):

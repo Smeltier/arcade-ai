@@ -1,6 +1,7 @@
 import pygame
 
 from moving_entity import MovingEntity
+from states.state import State
 from states.align import Align
 from states.seek import Seek
 from states.wander import Wander
@@ -38,7 +39,7 @@ class InputController:
 
     def handle_event(self, event):
         if event.type == pygame.KEYDOWN:
-            state = self.key_to_state.get(event.key)
+            state: State = self.key_to_state.get(event.key)
 
             if state in [Attraction, Separation, CollisionAvoidance]:
                 new_state = state(self.character)
