@@ -1,115 +1,67 @@
+import math
 import pygame
 
-class Environment:
-    def __init__(self, screen, cell_size, maze_file: str) -> None:
-        self.domain = screen
-        self.cell_size = cell_size
-        
-        self.maze = self.load_maze(maze_file)
-        self.maze_rows = len(self.maze)
-        self.maze_cols = len(self.maze[0]) 
+class Environment ():
+    def __init__(self, screen, maze_file: str) -> None:
+        self.screen = screen
+        self.width = screen.get_width()
+        self.height = screen.get_height()
+        self.cell_width = self.width // 30
+        self.cell_height = self.height // 32
+        self.wall_color = 'blue'
+        self.matriz = self._load_maze(maze_file)
 
-    def load_maze(self, file):
+    def _load_maze(self, maze_file: str):
         maze = []
-        with open(file, 'r') as f:
+        with open(maze_file, 'r') as f:
             for line in f:
                 row = [int(x) for x in line.split()]
                 maze.append(row)
         return maze
+    
+    def draw_maze(self):
+        color = self.wall_color
+        matriz_width = len(self.matriz[0])
+        matriz_height = len(self.matriz)
 
-    def draw(self):
-        ROWS = self.maze_rows
-        COLS = self.maze_cols
-        CELL_SIZE = self.cell_size
-        SCREEN = self.domain
-        RADIUS = CELL_SIZE // 2
+        for row in range(matriz_height):
+            for col in range(matriz_width):
+                x, y = col * self.cell_width, row * self.cell_height
 
-        wall_10 = pygame.image.load('pacman/sprites/sprite_00.png').convert_alpha()
-        wall_11 = pygame.image.load('pacman/sprites/sprite_01.png').convert_alpha()
-        wall_12 = pygame.image.load('pacman/sprites/sprite_02.png').convert_alpha()
-        wall_13 = pygame.image.load('pacman/sprites/sprite_03.png').convert_alpha()
-        wall_14 = pygame.image.load('pacman/sprites/sprite_04.png').convert_alpha()
-        wall_15 = pygame.image.load('pacman/sprites/sprite_05.png').convert_alpha()
-        wall_16 = pygame.image.load('pacman/sprites/sprite_06.png').convert_alpha()
-        wall_17 = pygame.image.load('pacman/sprites/sprite_07.png').convert_alpha()
-        wall_18 = pygame.image.load('pacman/sprites/sprite_08.png').convert_alpha()
-        wall_19 = pygame.image.load('pacman/sprites/sprite_09.png').convert_alpha()
-        wall_20 = pygame.image.load('pacman/sprites/sprite_10.png').convert_alpha()
-        wall_21 = pygame.image.load('pacman/sprites/sprite_11.png').convert_alpha()
-        wall_22 = pygame.image.load('pacman/sprites/sprite_12.png').convert_alpha()
-        wall_23 = pygame.image.load('pacman/sprites/sprite_13.png').convert_alpha()
-        wall_24 = pygame.image.load('pacman/sprites/sprite_14.png').convert_alpha()
-        wall_25 = pygame.image.load('pacman/sprites/sprite_15.png').convert_alpha()
-        wall_26 = pygame.image.load('pacman/sprites/sprite_16.png').convert_alpha()
-        wall_27 = pygame.image.load('pacman/sprites/sprite_17.png').convert_alpha()
+                if self.matriz[row][col] == 1:
+                    x += self.cell_height // 2
+                    y += self.cell_width // 2
+                    pygame.draw.circle(self.screen, "white", (x, y), 2)
 
-        wall_10 = pygame.transform.scale(wall_10, (CELL_SIZE, CELL_SIZE))
-        wall_11 = pygame.transform.scale(wall_11, (CELL_SIZE, CELL_SIZE))
-        wall_12 = pygame.transform.scale(wall_12, (CELL_SIZE, CELL_SIZE))
-        wall_13 = pygame.transform.scale(wall_13, (CELL_SIZE, CELL_SIZE))
-        wall_14 = pygame.transform.scale(wall_14, (CELL_SIZE, CELL_SIZE))
-        wall_15 = pygame.transform.scale(wall_15, (CELL_SIZE, CELL_SIZE))
-        wall_16 = pygame.transform.scale(wall_16, (CELL_SIZE, CELL_SIZE))
-        wall_17 = pygame.transform.scale(wall_17, (CELL_SIZE, CELL_SIZE))
-        wall_18 = pygame.transform.scale(wall_18, (CELL_SIZE, CELL_SIZE))
-        wall_19 = pygame.transform.scale(wall_19, (CELL_SIZE, CELL_SIZE))
-        wall_20 = pygame.transform.scale(wall_20, (CELL_SIZE, CELL_SIZE))
-        wall_21 = pygame.transform.scale(wall_21, (CELL_SIZE, CELL_SIZE))
-        wall_22 = pygame.transform.scale(wall_22, (CELL_SIZE, CELL_SIZE))
-        wall_23 = pygame.transform.scale(wall_23, (CELL_SIZE, CELL_SIZE))
-        wall_24 = pygame.transform.scale(wall_24, (CELL_SIZE, CELL_SIZE))
-        wall_25 = pygame.transform.scale(wall_25, (CELL_SIZE, CELL_SIZE))
-        wall_26 = pygame.transform.scale(wall_26, (CELL_SIZE, CELL_SIZE))
-        wall_27 = pygame.transform.scale(wall_27, (CELL_SIZE, CELL_SIZE))
+                if self.matriz[row][col] == 2:
+                    x += self.cell_height // 2
+                    y += self.cell_width // 2
+                    pygame.draw.circle(self.screen, "white", (x, y), 6)
 
-        for row in range(ROWS):
-            for col in range(COLS):
-                
-                x_pos = col * CELL_SIZE
-                y_pos = row * CELL_SIZE
+                if self.matriz[row][col] == 3:
+                    x += self.cell_height // 2
+                    pygame.draw.line(self.screen, color, (x, y), (x, y + self.cell_height))
 
-                center_x = x_pos + RADIUS
-                center_y = y_pos + RADIUS
+                if self.matriz[row][col] == 4:
+                    y += self.cell_width // 2
+                    pygame.draw.line(self.screen, color, (x, y), (x + self.cell_height, y))
 
-                if self.maze[row][col] == 1:
-                    pygame.draw.circle(SCREEN, "white", (center_x, center_y), CELL_SIZE // 10)
-                    continue
+                if self.matriz[row][col] == 5:
+                    x -= self.cell_height // 2
+                    y += self.cell_width // 2
+                    pygame.draw.arc(self.screen, color, (x, y, self.cell_height, self.cell_width), 0, math.pi / 2)
 
-                # pygame.draw.rect(SCREEN, "blue", (x_pos, y_pos, CELL_SIZE, CELL_SIZE))
+                if self.matriz[row][col] == 6:
+                    x += self.cell_height // 2
+                    y += self.cell_width // 2
+                    pygame.draw.arc(self.screen, color, (x, y, self.cell_height, self.cell_width), math.pi / 2, math.pi)
 
-                if self.maze[row][col] == 10:
-                    SCREEN.blit(wall_10, (x_pos, y_pos))
-                if self.maze[row][col] == 11:
-                    SCREEN.blit(wall_11, (x_pos, y_pos))
-                if self.maze[row][col] == 12:
-                    SCREEN.blit(wall_12, (x_pos, y_pos))
-                if self.maze[row][col] == 13:
-                    SCREEN.blit(wall_13, (x_pos, y_pos))
-                if self.maze[row][col] == 14:
-                    SCREEN.blit(wall_14, (x_pos, y_pos))
-                if self.maze[row][col] == 15:
-                    SCREEN.blit(wall_15, (x_pos, y_pos))
-                if self.maze[row][col] == 16:
-                    SCREEN.blit(wall_16, (x_pos, y_pos))
-                if self.maze[row][col] == 17:
-                    SCREEN.blit(wall_17, (x_pos, y_pos))
-                if self.maze[row][col] == 18:
-                    SCREEN.blit(wall_18, (x_pos, y_pos))
-                if self.maze[row][col] == 19:
-                    SCREEN.blit(wall_19, (x_pos, y_pos))
-                if self.maze[row][col] == 20:
-                    SCREEN.blit(wall_20, (x_pos, y_pos))
-                if self.maze[row][col] == 21:
-                    SCREEN.blit(wall_21, (x_pos, y_pos))
-                if self.maze[row][col] == 22:
-                    SCREEN.blit(wall_22, (x_pos, y_pos))
-                if self.maze[row][col] == 23:
-                    SCREEN.blit(wall_23, (x_pos, y_pos))
-                if self.maze[row][col] == 24:
-                    SCREEN.blit(wall_24, (x_pos, y_pos))
-                if self.maze[row][col] == 25:
-                    SCREEN.blit(wall_25, (x_pos, y_pos))
-                if self.maze[row][col] == 26:
-                    SCREEN.blit(wall_26, (x_pos, y_pos))
-                if self.maze[row][col] == 27:
-                    SCREEN.blit(wall_27, (x_pos, y_pos))
+                if self.matriz[row][col] == 7:
+                    x += self.cell_height // 2
+                    y -= self.cell_width // 2
+                    pygame.draw.arc(self.screen, color, (x, y, self.cell_height, self.cell_width), math.pi,  3 * math.pi / 2)
+
+                if self.matriz[row][col] == 8:
+                    x -= self.cell_height // 2
+                    y -= self.cell_width // 2
+                    pygame.draw.arc(self.screen, color, (x, y, self.cell_height, self.cell_width), 3 * math.pi / 2, 2 * math.pi)

@@ -2,31 +2,25 @@ import pygame
 
 from environment import Environment
 
-def main():
-    pygame.init()
+pygame.init()
 
-    game_title: str = "PACMAN"
-    pygame.display.set_caption(game_title)
+WIDTH, HEIGHT = 900, 950
+FPS = 60
+screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+clock = pygame.time.Clock()
 
-    WIDTH, HEIGHT = 840, 840
-    SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
-    CLOCK = pygame.time.Clock()
+environment = Environment(screen, 'pacman/maze.txt')
 
-    environment = Environment(SCREEN, 40, 'pacman/maze.txt')
+running = True
+while running:
+    screen.fill('black')
 
-    running = True
-    while running:
-        delta_time = CLOCK.tick(60) / 1000.0
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
+    environment.draw_maze()
 
-        environment.draw()
+    pygame.display.flip()  
 
-        pygame.display.flip()
-
-    pygame.quit()
-
-if __name__ == "__main__":
-    main()
+pygame.quit()
