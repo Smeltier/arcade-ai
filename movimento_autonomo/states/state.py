@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 
 from outputs import SteeringOutput
 
-class State(ABC):
+class State ():
     @abstractmethod 
     def execute(self): pass
 

@@ -2,6 +2,7 @@ import math
 import pygame
 
 from states.align import Align
+from states.steering_target import SteeringTarget
 from outputs import SteeringOutput
 
 class Face(Align):
@@ -19,14 +20,16 @@ class Face(Align):
             return SteeringOutput()
         
         old_target = self.target
-        temporary_target = type(self.target)()
-        temporary_target.orientation = math.atan2(-direction.x, direction.y)
+
+        temporary_target = SteeringTarget(
+            position    = self.target.position,
+            orientation = math.atan2(-direction.x, direction.y)
+        )
 
         self.target = temporary_target
-        
         steering = super().get_steering()
-
         self.target = old_target
+
         return steering
 
     def enter(self):

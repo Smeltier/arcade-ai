@@ -18,14 +18,14 @@ class MovingEntity (BaseGameEntity):
             max_force                = 1, 
             max_prediction           = 1.0, 
             max_rotation             = 50, 
-            max_angular_acceleration = 50,
+            max_angular_acceleration = 1000,
             offset                   = 2.0, 
             radius                   = 1.0, 
             rate                     = 0.4, 
             orientation              = 1,
             threshold                = 100, 
             decay_coefficient        = 100000, 
-            time_to_target           = 0.25, 
+            time_to_target           = 0.1, 
             target_radius            = 2.0, 
             slow_radius              = 20, 
             detection_radius         = 50, 
@@ -57,6 +57,7 @@ class MovingEntity (BaseGameEntity):
         self.wander_radius = radius
         self.wander_rate = rate
         self.wander_orientation = orientation 
+        
         self.threshold = threshold
         self.decay_coefficient = decay_coefficient
         self.time_to_target = time_to_target
@@ -133,12 +134,21 @@ class MovingEntity (BaseGameEntity):
     def draw(self, SCREEN) -> None:
         if self.velocity.length() > 0:
             direction = self.velocity.normalize()        
-            line_length = 10  
+            line_length = 15  
             line_end = self.position + direction * line_length
 
             pygame.draw.line(SCREEN, "white",  
                             (int(self.position.x), int(self.position.y)),
                             (int(line_end.x), int(line_end.y)), 2) 
+
+            direction = pygame.math.Vector2(math.cos(self.orientation), math.sin(self.orientation))
+            line_length = 10
+            line_end = self.position + direction * line_length
+
+            pygame.draw.line(SCREEN, "grey",  
+                            (int(self.position.x), int(self.position.y)),
+                            (int(line_end.x), int(line_end.y)), 2)
+
 
         pygame.draw.circle(SCREEN, self.color, 
                            (int(self.position.x), int(self.position.y)), 8)
