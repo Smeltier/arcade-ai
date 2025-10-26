@@ -15,9 +15,10 @@ class Environment ():
         self.rows = len(self.maze)
         self.cols = len(self.maze[0])
         self.matrix = self._load_walls()
-
+        self.total_tablets = self._count_tablets()
         self.maze_surface.fill('black')
         self._draw_maze(self.maze_surface)
+        self.font = pygame.font.Font(None, 36)
 
     def _load_maze(self, maze_file: str):
         maze = []
@@ -33,6 +34,14 @@ class Environment ():
             new_row = [-1 if x > 2 else x for x in row]
             matrix.append(new_row)
         return matrix
+    
+    def _count_tablets(self):
+        count = 0
+        for row in range(self.rows):
+            for col in range(self.cols):
+                if self.matrix[row][col] == 1 or self.matrix[row][col] == 2:
+                    count += 1
+        return count
     
     def _draw_maze(self, surface): # O(H * W)
         color = 'blue'
@@ -71,7 +80,7 @@ class Environment ():
 
                 elif self.maze[row][col] == 9:
                     y += self.cell_width // 2
-                    pygame.draw.line(surface, "pink", (x, y), (x + self.cell_height, y))
+                    pygame.draw.line(surface, "white", (x, y), (x + self.cell_height, y))
 
     def _draw_food(self):
         color = 'white'
@@ -80,12 +89,12 @@ class Environment ():
             for col in range(self.cols):
                 x, y = col * self.cell_width, row * self.cell_height
 
-                if self.maze[row][col] == 1:
+                if self.matrix[row][col] == 1:
                     x += self.cell_height // 2
                     y += self.cell_width // 2
                     pygame.draw.circle(self.screen, color, (x, y), 2)
 
-                if self.maze[row][col] == 2:
+                if self.matrix[row][col] == 2:
                     x += self.cell_height // 2
                     y += self.cell_width // 2
                     pygame.draw.circle(self.screen, color, (x, y), 6)
@@ -94,10 +103,20 @@ class Environment ():
         for entity in self.entities:
             entity.draw(self.screen)
 
+    def _draw_score(self):
+        if not self.entities: return
+
+        player_score = self.entities[0].total_points
+
+        text_surface = self.font.render(f"SCORE: {player_score}", True, 'white')
+        text_rect = text_surface.get_rect(topleft=(10, 10))
+        self.screen.blit(text_surface, text_rect)
+
     def draw(self):
         self.screen.blit(self.maze_surface, (0, 0))
         self._draw_food()
         self._draw_entities()
+        self._draw_score()
 
     def add_entity(self, entity):
         if entity is None:

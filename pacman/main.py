@@ -5,19 +5,17 @@ from character import Character
 
 pygame.init()
 
-WIDTH, HEIGHT = 900, 950
 FPS = 60
+WIDTH, HEIGHT = 900, 950
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
 clock = pygame.time.Clock()
 
 environment = Environment(screen, 'pacman/maze.txt')
 
-cell_w = environment.cell_width 
-cell_h = environment.cell_height
-start_row = 2
 start_col = 2
-x = start_col * cell_w + cell_w / 2
-y = start_row * cell_h + cell_h / 2
+start_row = 2
+x = start_col * environment.cell_width + environment.cell_width // 2
+y = start_row * environment.cell_height + environment.cell_height // 2
 character = Character(x, y, environment)
 
 environment.add_entity(character)
@@ -30,8 +28,7 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-    key = pygame.key.get_pressed()
-    environment.update(key, delta_time)
+    environment.update(pygame.key.get_pressed(), delta_time)
     environment.draw()
 
     pygame.display.flip()  
