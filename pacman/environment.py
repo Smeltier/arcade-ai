@@ -9,7 +9,15 @@ class Environment ():
         self.cell_width = self.width // 30
         self.cell_height = self.height // 32
         self.wall_color = 'blue'
-        self.matrix = self._load_maze(maze_file)
+        self.maze_surface = pygame.Surface((self.width, self.height))
+        self.entities = []
+        self.maze = self._load_maze(maze_file)
+        self.rows = len(self.maze)
+        self.cols = len(self.maze[0])
+        self.matrix = self._load_walls()
+
+        self.maze_surface.fill('black')
+        self._draw_maze(self.maze_surface)
 
     def _load_maze(self, maze_file: str):
         maze = []
@@ -19,53 +27,87 @@ class Environment ():
                 maze.append(row)
         return maze
     
-    def draw_maze(self):
+    def _load_walls(self):
+        matrix = []
+        for row in self.maze:
+            new_row = [-1 if x > 2 else x for x in row]
+            matrix.append(new_row)
+        return matrix
+    
+    def _draw_maze(self, surface): # O(H * W)
         color = 'blue'
-        matrix_width = len(self.matrix[0])
-        matrix_height = len(self.matrix)
 
-        for row in range(matrix_height):
-            for col in range(matrix_width):
+        for row in range(self.rows):
+            for col in range(self.cols):
                 x, y = col * self.cell_width, row * self.cell_height
 
-                if self.matrix[row][col] == 1:
+                if self.maze[row][col] == 3:
                     x += self.cell_height // 2
+                    pygame.draw.line(surface, color, (x, y), (x, y + self.cell_height))
+
+                elif self.maze[row][col] == 4:
                     y += self.cell_width // 2
-                    pygame.draw.circle(self.screen, "white", (x, y), 2)
+                    pygame.draw.line(surface, color, (x, y), (x + self.cell_height, y))
 
-                if self.matrix[row][col] == 2:
-                    x += self.cell_height // 2
-                    y += self.cell_width // 2
-                    pygame.draw.circle(self.screen, "white", (x, y), 6)
-
-                if self.matrix[row][col] == 3:
-                    x += self.cell_height // 2
-                    pygame.draw.line(self.screen, color, (x, y), (x, y + self.cell_height))
-
-                if self.matrix[row][col] == 4:
-                    y += self.cell_width // 2
-                    pygame.draw.line(self.screen, color, (x, y), (x + self.cell_height, y))
-
-                if self.matrix[row][col] == 5:
+                elif self.maze[row][col] == 5:
                     x -= self.cell_height // 2
                     y += self.cell_width // 2
-                    pygame.draw.arc(self.screen, color, (x, y, self.cell_height, self.cell_width), 0, math.pi / 2)
+                    pygame.draw.arc(surface, color, (x, y, self.cell_height, self.cell_width), 0, math.pi / 2)
 
-                if self.matrix[row][col] == 6:
+                elif self.maze[row][col] == 6:
                     x += self.cell_height // 2
                     y += self.cell_width // 2
-                    pygame.draw.arc(self.screen, color, (x, y, self.cell_height, self.cell_width), math.pi / 2, math.pi)
+                    pygame.draw.arc(surface, color, (x, y, self.cell_height, self.cell_width), math.pi / 2, math.pi)
 
-                if self.matrix[row][col] == 7:
+                elif self.maze[row][col] == 7:
                     x += self.cell_height // 2
                     y -= self.cell_width // 2
-                    pygame.draw.arc(self.screen, color, (x, y, self.cell_height, self.cell_width), math.pi,  3 * math.pi / 2)
+                    pygame.draw.arc(surface, color, (x, y, self.cell_height, self.cell_width), math.pi, 3 * math.pi / 2)
 
-                if self.matrix[row][col] == 8:
+                elif self.maze[row][col] == 8:
                     x -= self.cell_height // 2
                     y -= self.cell_width // 2
-                    pygame.draw.arc(self.screen, color, (x, y, self.cell_height, self.cell_width), 3 * math.pi / 2, 2 * math.pi)
+                    pygame.draw.arc(surface, color, (x, y, self.cell_height, self.cell_width), 3 * math.pi / 2, 2 * math.pi)
 
-                if self.matrix[row][col] == 9:
+                elif self.maze[row][col] == 9:
                     y += self.cell_width // 2
-                    pygame.draw.line(self.screen, "white", (x, y), (x + self.cell_height, y))
+                    pygame.draw.line(surface, "pink", (x, y), (x + self.cell_height, y))
+
+    def _draw_food(self):
+        color = 'white'
+
+        for row in range(self.rows):
+            for col in range(self.cols):
+                x, y = col * self.cell_width, row * self.cell_height
+
+                if self.maze[row][col] == 1:
+                    x += self.cell_height // 2
+                    y += self.cell_width // 2
+                    pygame.draw.circle(self.screen, color, (x, y), 2)
+
+                if self.maze[row][col] == 2:
+                    x += self.cell_height // 2
+                    y += self.cell_width // 2
+                    pygame.draw.circle(self.screen, color, (x, y), 6)
+
+    def _draw_entities(self):
+        for entity in self.entities:
+            entity.draw(self.screen)
+
+    def draw(self):
+        self.screen.blit(self.maze_surface, (0, 0))
+        self._draw_food()
+        self._draw_entities()
+
+    def add_entity(self, entity):
+        if entity is None:
+            raise ValueError('Entidade inválida.')
+        
+        self.entities.append(entity)
+
+    def remove_entity(self, entity):
+        self.entities = [e for e in self.entities if e is not entity]
+
+    def update(self, keys, delta_time):
+        for entity in self.entities:
+            entity.update(keys, delta_time)
