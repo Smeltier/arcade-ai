@@ -4,16 +4,21 @@ class Character ():
     def __init__(self, x, y, environment):
         self.position = pygame.Vector2((x, y))
         self.environment = environment
-        self.current_orientation = 0 # 1 = up, 2 = down, 3 = left, 4 = right.
-        self.next_orientation = 0 
+
+        self.current_orientation = 0
+        self.next_orientation = 0
+
         self.sprites = self._load_sprites()
         self.animation_timer = 0.0
         self.animation_speed = 0.15
         self.animation_frame = 0
+
         self.total_points = 0
         self.speed = 2
 
-    def _update_orientation(self, keys):
+    def _update_orientation(self, keys) -> None:
+        """ Atualize a próxima orientação do personagem baseado na tecla pressionada. """
+
         key_map = {
             pygame.K_UP : 1,
             pygame.K_DOWN : 2,
@@ -25,7 +30,9 @@ class Character ():
             if keys[k]:
                 self.next_orientation = ft
 
-    def _is_on_grid(self): 
+    def _is_on_grid(self) -> bool: 
+        """ Verifica se o personagem está dentro da célula atual da matriz. """
+
         row = int(self.position.y // self.environment.cell_height)
         col = int(self.position.x // self.environment.cell_width)
 
@@ -40,7 +47,9 @@ class Character ():
         
         return False
     
-    def _make_point(self):
+    def _make_point(self) -> None:
+        """ Aumenta a pontuação baseado em qual tipo de pastilha o personagem comeu. """
+
         row = int(self.position.y // self.environment.cell_height)
         col = int(self.position.x // self.environment.cell_width)
 
@@ -59,7 +68,9 @@ class Character ():
             self.total_points += 20
             self.environment.total_tablets -= 1
 
-    def _handle_moviment(self):
+    def _handle_moviment(self) -> None:
+        """ Movimenta o personagem baseado na tecla que foi pressionada. """
+
         if self._is_on_grid():
             if self._can_move(self.next_orientation):
                 self.current_orientation = self.next_orientation
@@ -75,14 +86,38 @@ class Character ():
         elif self.current_orientation == 4:
             self.position.x += self.speed
 
-    def _load_sprites(self):
+    def _load_sprites(self) -> list[pygame.Surface]:
+        """ Carrega os sprites do personagem. """
+
         sprites = []
         for cnt in range(0, 3):
             sprite = pygame.transform.scale(pygame.image.load(f'pacman/images/pacman_eat_{cnt}.png'), (40, 40))
             sprites.append(sprite)
+
         return sprites
     
-    def update(self, keys, delta_time):
+    def _can_move(self, direction) -> bool:
+        """ Verifica se o personagem pode se mover. """
+
+        col = int(self.position.x // self.environment.cell_width)
+        row = int(self.position.y // self.environment.cell_height)
+
+        if direction == 1:   row -= 1
+        elif direction == 2: row += 1
+        elif direction == 3: col -= 1
+        elif direction == 4: col += 1
+        elif direction == 0: return True
+        
+        if (0 <= row < len(self.environment.matrix) and 0 <= col < len(self.environment.matrix[0])):
+            
+            if self.environment.matrix[row][col] != -1:
+                return True
+
+        return False
+    
+    def update(self, keys, delta_time) -> None:
+        """ Atualiza o personagem de acordo com o passar do tempo. """
+
         self._update_orientation(keys)
         self._handle_moviment()
         self._make_point()
@@ -96,7 +131,9 @@ class Character ():
         else:
             self.animation_frame = 0
 
-    def draw(self, screen):
+    def draw(self, screen) -> None:
+        """ Desenha o personagem baseado na orientação atual. """
+
         x, y = int(self.position.x), int(self.position.y)
         sprite = self.sprites[self.animation_frame]
 
@@ -113,20 +150,3 @@ class Character ():
 
         rect = rotated_sprite.get_rect(center=(x, y))
         screen.blit(rotated_sprite, rect)
-
-    def _can_move(self, direction):
-        col = int(self.position.x // self.environment.cell_width)
-        row = int(self.position.y // self.environment.cell_height)
-
-        if direction == 1:   row -= 1
-        elif direction == 2: row += 1
-        elif direction == 3: col -= 1
-        elif direction == 4: col += 1
-        elif direction == 0: return True
-        
-        if (0 <= row < len(self.environment.matrix) and 0 <= col < len(self.environment.matrix[0])):
-            
-            if self.environment.matrix[row][col] != -1:
-                return True
-
-        return False

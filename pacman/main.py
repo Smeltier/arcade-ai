@@ -12,10 +12,8 @@ clock = pygame.time.Clock()
 
 environment = Environment(screen, 'pacman/maze.txt')
 
-start_col = 2
-start_row = 2
-x = start_col * environment.cell_width + environment.cell_width // 2
-y = start_row * environment.cell_height + environment.cell_height // 2
+x = 2 * environment.cell_width + environment.cell_width // 2
+y = 2 * environment.cell_height + environment.cell_height // 2
 character = Character(x, y, environment)
 
 environment.add_entity(character)
