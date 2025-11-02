@@ -1,34 +1,29 @@
 import pygame
 
-class Character ():
+class PacMan ():
     def __init__(self, x, y, environment):
         self.position = pygame.Vector2((x, y))
         self.environment = environment
 
-        self.current_orientation = 0
-        self.next_orientation = 0
+        self._current_orientation = 0
+        self._next_orientation = 0
 
-        self.sprites = self._load_sprites()
-        self.animation_timer = 0.0
-        self.animation_speed = 0.15
-        self.animation_frame = 0
+        self._sprites = self._load_sprites()
+        self._animation_timer = 0.0
+        self._animation_speed = 0.15
+        self._animation_frame = 0
 
         self.total_points = 0
-        self.speed = 2
+        self._speed = 2
 
     def _update_orientation(self, keys) -> None:
-        """ Atualize a próxima orientação do personagem baseado na tecla pressionada. """
+        """ Atualiza a próxima orientação do personagem baseado na tecla pressionada. """
 
-        key_map = {
-            pygame.K_UP : 1,
-            pygame.K_DOWN : 2,
-            pygame.K_LEFT : 3,
-            pygame.K_RIGHT : 4
-        }
+        key_map = { pygame.K_UP : 1, pygame.K_DOWN : 2, pygame.K_LEFT : 3, pygame.K_RIGHT : 4 }
 
         for k, ft in key_map.items():
             if keys[k]:
-                self.next_orientation = ft
+                self._next_orientation = ft
 
     def _is_on_grid(self) -> bool: 
         """ Verifica se o personagem está dentro da célula atual da matriz. """
@@ -39,7 +34,7 @@ class Character ():
         center_x = (col * self.environment.cell_width) + (self.environment.cell_width / 2)
         center_y = (row * self.environment.cell_height) + (self.environment.cell_height / 2)
 
-        if abs(self.position.x - center_x) < self.speed and abs(self.position.y - center_y) < self.speed:
+        if abs(self.position.x - center_x) < self._speed and abs(self.position.y - center_y) < self._speed:
             self.position.x = center_x
             self.position.y = center_y
 
@@ -72,26 +67,26 @@ class Character ():
         """ Movimenta o personagem baseado na tecla que foi pressionada. """
 
         if self._is_on_grid():
-            if self._can_move(self.next_orientation):
-                self.current_orientation = self.next_orientation
-            elif not self._can_move(self.current_orientation):
-                self.current_orientation = 0
+            if self._can_move(self._next_orientation):
+                self._current_orientation = self._next_orientation
+            elif not self._can_move(self._current_orientation):
+                self._current_orientation = 0
 
-        if self.current_orientation == 1:
-            self.position.y -= self.speed
-        elif self.current_orientation == 2:
-            self.position.y += self.speed
-        elif self.current_orientation == 3:
-            self.position.x -= self.speed
-        elif self.current_orientation == 4:
-            self.position.x += self.speed
+        if self._current_orientation == 1:
+            self.position.y -= self._speed
+        elif self._current_orientation == 2:
+            self.position.y += self._speed
+        elif self._current_orientation == 3:
+            self.position.x -= self._speed
+        elif self._current_orientation == 4:
+            self.position.x += self._speed
 
     def _load_sprites(self) -> list[pygame.Surface]:
         """ Carrega os sprites do personagem. """
 
         sprites = []
         for cnt in range(0, 3):
-            sprite = pygame.transform.scale(pygame.image.load(f'pacman/images/pacman_eat_{cnt}.png'), (40, 40))
+            sprite = pygame.transform.scale(pygame.image.load(f'pacman_game/images/pacman_eat_{cnt}.png'), (40, 40))
             sprites.append(sprite)
 
         return sprites
@@ -122,28 +117,28 @@ class Character ():
         self._handle_moviment()
         self._make_point()
 
-        if self.current_orientation != 0:
-            self.animation_timer += delta_time / 2
+        if self._current_orientation != 0:
+            self._animation_timer += delta_time / 2
 
-            if self.animation_timer >= self.animation_speed:
-                self.animation_timer -= self.animation_speed
-                self.animation_frame = (self.animation_frame + 1) % len(self.sprites)
+            if self._animation_timer >= self._animation_speed:
+                self._animation_timer -= self._animation_speed
+                self._animation_frame = (self._animation_frame + 1) % len(self._sprites)
         else:
-            self.animation_frame = 0
+            self._animation_frame = 0
 
     def draw(self, screen) -> None:
         """ Desenha o personagem baseado na orientação atual. """
 
         x, y = int(self.position.x), int(self.position.y)
-        sprite = self.sprites[self.animation_frame]
+        sprite = self._sprites[self._animation_frame]
 
         angle = 0
 
-        if self.current_orientation == 1:
+        if self._current_orientation == 1:
             angle = 90
-        elif self.current_orientation == 2:
+        elif self._current_orientation == 2:
             angle = -90
-        elif self.current_orientation == 3:
+        elif self._current_orientation == 3:
             angle = 180
 
         rotated_sprite = pygame.transform.rotate(sprite, angle)

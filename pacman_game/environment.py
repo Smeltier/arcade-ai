@@ -7,7 +7,7 @@ class Environment ():
         self.width = screen.get_width()
         self.height = screen.get_height()
         self.maze_surface = pygame.Surface((self.width, self.height))
-        self.font = pygame.font.Font(None, 36)
+        self.text_font = pygame.font.Font(None, 36)
         self.wall_color = 'blue'
 
         self.cell_width = self.width // 30
@@ -16,8 +16,8 @@ class Environment ():
         self.entities = []
 
         self.maze = self._load_maze(maze_file)
-        self.rows = len(self.maze)
-        self.cols = len(self.maze[0])
+        self.maze_rows = len(self.maze)
+        self.maze_cols = len(self.maze[0])
 
         self.matrix = self._load_walls()
         self.total_tablets = self._count_tablets()
@@ -50,8 +50,8 @@ class Environment ():
         """ Conta a quantidade de pastilhas presentes no labirinto. """
 
         count = 0
-        for row in range(self.rows):
-            for col in range(self.cols):
+        for row in range(self.maze_rows):
+            for col in range(self.maze_cols):
                 if self.matrix[row][col] == 1 or self.matrix[row][col] == 2:
                     count += 1
 
@@ -62,8 +62,8 @@ class Environment ():
 
         color = 'blue'
 
-        for row in range(self.rows):
-            for col in range(self.cols):
+        for row in range(self.maze_rows):
+            for col in range(self.maze_cols):
                 x, y = col * self.cell_width, row * self.cell_height
 
                 if self.maze[row][col] == 3:
@@ -103,8 +103,8 @@ class Environment ():
 
         color = 'white'
 
-        for row in range(self.rows):
-            for col in range(self.cols):
+        for row in range(self.maze_rows):
+            for col in range(self.maze_cols):
                 x, y = col * self.cell_width, row * self.cell_height
 
                 if self.matrix[row][col] == 1:
@@ -130,7 +130,7 @@ class Environment ():
 
         player_score = self.entities[0].total_points
 
-        text_surface = self.font.render(f"SCORE: {player_score}", True, 'white')
+        text_surface = self.text_font.render(f"SCORE: {player_score}", True, 'white')
         text_rect = text_surface.get_rect(topleft=(10, 10))
         self.screen.blit(text_surface, text_rect)
 

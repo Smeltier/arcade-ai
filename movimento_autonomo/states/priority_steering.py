@@ -1,5 +1,6 @@
 import pygame
 
+from state import State
 from blended_steering import BlendedSteering
 from outputs import SteeringOutput
 

@@ -3,7 +3,7 @@ import pygame
 from states.state import State
 from outputs import SteeringOutput
 
-class Seek( State):
+class Seek (State):
     def __init__(self, character, target):
         super().__init__()
 

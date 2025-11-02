@@ -14,18 +14,17 @@ class DefensiveCirclePattern ():
     def get_drift_offset(self, assignments) -> Static:
         center = Static()
         
-        if not assignments: 
-            return center
+        if not assignments: return center
 
         for assignment in assignments:
             location: Static = self.get_slot_location(assignment.slot_number, len(assignments))
 
-            center.position += location.position
+            center.position    += location.position
             center.orientation += location.orientation
 
         size = len(assignments)
 
-        center.position /= size
+        center.position    /= size
         center.orientation /= size
 
         return center

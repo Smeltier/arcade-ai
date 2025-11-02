@@ -1,8 +1,8 @@
 import math
 import pygame
 
-from formation.static import Static
-from formation.slot_assignment import SlotAssignment
+from .static import Static
+from .slot_assignment import SlotAssignment
 
 class FormationManager:
     def __init__(self, pattern):
