@@ -4,7 +4,12 @@
             "path": "movimento_autonomo/main.py",
             "envManager": "ms-python.python:venv",
             "packageManager": "ms-python.python:pip"
+        },
+        {
+            "path": "venv",
+            "envManager": "ms-python.python:venv",
+            "packageManager": "ms-python.python:pip"
         }
     ],
-    "python.analysis.autoImportCompletions": false
+    "python-envs.defaultEnvManager": "ms-python.python:venv"
 }

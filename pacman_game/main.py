@@ -4,6 +4,7 @@ from environment import Environment
 from pacman import PacMan
 
 pygame.init()
+pygame.mixer.init()
 
 FPS = 60
 WIDTH, HEIGHT = 900, 950

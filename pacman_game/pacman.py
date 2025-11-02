@@ -13,6 +13,9 @@ class PacMan ():
         self._animation_speed = 0.15
         self._animation_frame = 0
 
+        self.eat_sound = pygame.mixer.Sound('pacman/sounds/Waka Waka.mp3')
+        self.eat_sound.set_volume(0.4)
+
         self.total_points = 0
         self._speed = 2
 
@@ -62,23 +65,33 @@ class PacMan ():
             self.environment.matrix[row][col] = 0
             self.total_points += 20
             self.environment.total_tablets -= 1
+            
+            self.environment.set_vulnerable()
 
     def _handle_moviment(self) -> None:
         """ Movimenta o personagem baseado na tecla que foi pressionada. """
 
         if self._is_on_grid():
-            if self._can_move(self._next_orientation):
-                self._current_orientation = self._next_orientation
-            elif not self._can_move(self._current_orientation):
-                self._current_orientation = 0
+            self._play_eat_sound()
+            self._make_point()
 
-        if self._current_orientation == 1:
+            if self._can_move(self._next_orientation):
+                self.current_orientation = self._next_orientation
+            elif not self._can_move(self.current_orientation):
+                self.current_orientation = 0
+
+        if self.position.x <= 15: 
+            self.position.x = 880
+        if self.position.x >= 885: 
+            self.position.x = 20
+
+        if self.current_orientation == 1:
             self.position.y -= self._speed
-        elif self._current_orientation == 2:
+        elif self.current_orientation == 2:
             self.position.y += self._speed
-        elif self._current_orientation == 3:
+        elif self.current_orientation == 3:
             self.position.x -= self._speed
-        elif self._current_orientation == 4:
+        elif self.current_orientation == 4:
             self.position.x += self._speed
 
     def _load_sprites(self) -> list[pygame.Surface]:
@@ -110,21 +123,37 @@ class PacMan ():
 
         return False
     
-    def update(self, keys, delta_time) -> None:
-        """ Atualiza o personagem de acordo com o passar do tempo. """
+    def _update_sprite(self, delta_time):
+        if self.current_orientation == 0:
+            self.current_orientation = self.previous_orientation
+            return
 
+        self.animation_timer += delta_time / 2
+
+        if self.animation_timer >= self._animation_speed:
+            self.animation_timer -= self._animation_speed
+            self.animation_frame = (self.animation_frame + 1) % len(self._sprites)
+
+        self.previous_orientation = self.current_orientation
+
+    def _play_eat_sound(self):
+        row = int(self.position.y // self.environment.cell_height)
+        col = int(self.position.x // self.environment.cell_width)
+
+        point_type = 0
+        if 0 <= row < len(self.environment.matrix) and 0 <= col < len(self.environment.matrix[0]):
+            point_type = self.environment.matrix[row][col]
+
+        if point_type in (1, 2) and self.current_orientation != 0:
+            if self.eat_sound.get_num_channels() == 0:
+                self.eat_sound.play(loops=-1)
+        else:
+            self.eat_sound.stop()
+
+    def update(self, keys, delta_time):
         self._update_orientation(keys)
         self._handle_moviment()
-        self._make_point()
-
-        if self._current_orientation != 0:
-            self._animation_timer += delta_time / 2
-
-            if self._animation_timer >= self._animation_speed:
-                self._animation_timer -= self._animation_speed
-                self._animation_frame = (self._animation_frame + 1) % len(self._sprites)
-        else:
-            self._animation_frame = 0
+        self._update_sprite(delta_time)
 
     def draw(self, screen) -> None:
         """ Desenha o personagem baseado na orientação atual. """

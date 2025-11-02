@@ -7,7 +7,21 @@ class Environment ():
         self.width = screen.get_width()
         self.height = screen.get_height()
         self.maze_surface = pygame.Surface((self.width, self.height))
+
         self.text_font = pygame.font.Font(None, 36)
+
+        self.game_state = 'chase'
+        self.vulnerable_timer = 0
+        self.vulnerable_duration = 7000
+
+        self.siren_chase_path = 'pacman/sounds/Siren Background Sound.mp3'
+        self.siren_vulnerable_path = 'pacman/sounds/Power Up Sound.mp3'
+        
+        pygame.mixer.music.load(self.siren_chase_path)
+        pygame.mixer.music.set_volume(0.2)
+        
+        pygame.mixer.music.play(loops=-1)
+        
         self.wall_color = 'blue'
 
         self.cell_width = self.width // 30
@@ -156,8 +170,34 @@ class Environment ():
 
         self.entities = [e for e in self.entities if e is not entity]
 
+
+    def set_vulnerable(self) -> None:
+        """ Ativa o estado 'vulnerável' (fantasmas azuis). """
+        
+        if self.game_state == 'chase':
+            self.game_state = 'vulnerable'
+            
+            pygame.mixer.music.load(self.siren_vulnerable_path)
+            pygame.mixer.music.play(loops=-1)
+            
+            self.vulnerable_timer = pygame.time.get_ticks()
+
+    def set_chase(self) -> None:
+        """ Ativa o estado 'perseguição' (normal). """
+        
+        self.game_state = 'chase'
+        
+        pygame.mixer.music.load(self.siren_chase_path)
+        pygame.mixer.music.play(loops=-1)
+
     def update(self, keys, delta_time: float) -> None:
         """ Atualiza o ambiente e suas entidades de acordo com o passar do tempo. """
+
+        if self.game_state == 'vulnerable':
+            now = pygame.time.get_ticks()
+
+            if now - self.vulnerable_timer > self.vulnerable_duration:
+                self.set_chase()
 
         for entity in self.entities:
             entity.update(keys, delta_time)
