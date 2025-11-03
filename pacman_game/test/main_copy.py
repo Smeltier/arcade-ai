@@ -12,7 +12,7 @@ def main():
     SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
     CLOCK = pygame.time.Clock()
 
-    environment = Environment(SCREEN, 40, 'pacman/test/maze.txt')
+    environment = Environment(SCREEN, 40, 'pacman_game/test/maze.txt')
 
     running = True
     while running:
