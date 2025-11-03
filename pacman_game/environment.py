@@ -14,8 +14,8 @@ class Environment ():
         self.vulnerable_timer = 0
         self.vulnerable_duration = 7000
 
-        self.siren_chase_path = 'pacman/sounds/Siren Background Sound.mp3'
-        self.siren_vulnerable_path = 'pacman/sounds/Power Up Sound.mp3'
+        self.siren_chase_path = 'pacman_game/sounds/Siren Background Sound.wav'
+        self.siren_vulnerable_path = 'pacman_game/sounds/Power Up Sound.wav'
         
         pygame.mixer.music.load(self.siren_chase_path)
         pygame.mixer.music.set_volume(0.2)
