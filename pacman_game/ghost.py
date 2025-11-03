@@ -1,7 +1,7 @@
 import pygame
-from abc import abstractmethod
 
-class Ghost ():
-    def __init__(self, x, y, environment) -> None:
-        self.position = pygame.Vector2((x, y))
-        self.environment = environment
+from entity import Entity
+
+class Ghost (Entity):
+    def __init__(self, x, y, environment):
+        super().__init__(x, y, environment)

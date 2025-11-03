@@ -1,9 +1,10 @@
 import pygame
 
-class PacMan ():
+from entity import Entity
+
+class PacMan (Entity):
     def __init__(self, x, y, environment):
-        self.position = pygame.Vector2((x, y))
-        self._ENVIRONMENT = environment
+        super().__init__(x, y, environment)
 
         self._previous_orientation = 0
         self._current_orientation = 0
