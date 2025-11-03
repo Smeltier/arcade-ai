@@ -12,7 +12,7 @@ pygame.display.set_caption(game_title)
 FPS = 60
 WIDTH, HEIGHT = 900, 950
 SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
-clock = pygame.time.Clock()
+CLOCK = pygame.time.Clock()
 
 environment = Environment(
     screen = SCREEN, 
@@ -30,13 +30,13 @@ environment.add_entity(pacman)
 running = True
 
 while running:
-    delta_time = clock.tick(FPS) / 1000.0
+    delta_time = CLOCK.tick(FPS) / 1000.0
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
-    environment.update(pygame.key.get_pressed(), delta_time)
+    environment.update(delta_time)
     environment.draw()
 
     pygame.display.flip()

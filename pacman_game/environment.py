@@ -190,7 +190,7 @@ class Environment ():
         pygame.mixer.music.load(self.siren_chase_path)
         pygame.mixer.music.play(loops=-1)
 
-    def update(self, keys, delta_time: float) -> None:
+    def update(self, delta_time: float) -> None:
         """ Atualiza o ambiente e suas entidades de acordo com o passar do tempo. """
 
         if self.game_state == 'vulnerable':
@@ -200,4 +200,4 @@ class Environment ():
                 self.set_chase()
 
         for entity in self.entities:
-            entity.update(keys, delta_time)
+            entity.update(delta_time)

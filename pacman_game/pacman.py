@@ -156,7 +156,7 @@ class PacMan (Entity):
         else:
             self.eat_sound.stop()
 
-    def update(self, keys, delta_time):
+    def update(self, delta_time):
         """ Atualiza o personagem. """
 
         self._update_orientation(pygame.key.get_pressed())
