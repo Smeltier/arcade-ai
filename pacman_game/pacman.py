@@ -126,6 +126,8 @@ class PacMan (Entity):
         return False
     
     def _update_sprite(self, delta_time):
+        """ Atualiza o sprite do personagem baseado no tempo. """
+
         if self._current_orientation == 0:
             self._current_orientation = self._previous_orientation
             return
@@ -139,6 +141,8 @@ class PacMan (Entity):
         self._previous_orientation = self._current_orientation
 
     def _play_eat_sound(self):
+        """ Toca um som quando o personagem come uma pastilha. """
+
         row = int(self.position.y // self._ENVIRONMENT.cell_height)
         col = int(self.position.x // self._ENVIRONMENT.cell_width)
 
@@ -153,6 +157,8 @@ class PacMan (Entity):
             self.eat_sound.stop()
 
     def update(self, keys, delta_time):
+        """ Atualiza o personagem. """
+
         self._update_orientation(pygame.key.get_pressed())
         self._handle_moviment()
         self._update_sprite(delta_time)
