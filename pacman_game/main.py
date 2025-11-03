@@ -11,16 +11,21 @@ pygame.display.set_caption(game_title)
 
 FPS = 60
 WIDTH, HEIGHT = 900, 950
-screen = pygame.display.set_mode((WIDTH, HEIGHT), )
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 
-environment = Environment(screen, 'pacman_game/maze.txt')
+environment = Environment(
+    screen, 
+    'pacman_game/maze.txt'
+)
 
-x = 2 * environment.cell_width + environment.cell_width // 2
-y = 2 * environment.cell_height + environment.cell_height // 2
-character = PacMan(x, y, environment)
+pacman = PacMan (
+    15 * environment.cell_width + environment.cell_width // 2, 
+    18 * environment.cell_height + environment.cell_height // 2, 
+    environment
+)
 
-environment.add_entity(character)
+environment.add_entity(pacman)
 
 running = True
 
