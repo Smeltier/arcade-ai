@@ -6,9 +6,12 @@ from pacman import PacMan
 pygame.init()
 pygame.mixer.init()
 
+game_title: str = "Pac-Man"
+pygame.display.set_caption(game_title)
+
 FPS = 60
 WIDTH, HEIGHT = 900, 950
-screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+screen = pygame.display.set_mode((WIDTH, HEIGHT), )
 clock = pygame.time.Clock()
 
 environment = Environment(screen, 'pacman_game/maze.txt')
@@ -20,6 +23,7 @@ character = PacMan(x, y, environment)
 environment.add_entity(character)
 
 running = True
+
 while running:
     delta_time = clock.tick(FPS) / 1000.0
 
