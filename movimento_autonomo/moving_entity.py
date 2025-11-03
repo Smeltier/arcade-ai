@@ -1,10 +1,10 @@
 import math
 import pygame 
 
-from base_game_entity import BaseGameEntity
-from world            import World
-from state_machine    import StateMachine
-from outputs          import SteeringOutput, KinematicSteeringOutput
+from .base_game_entity import BaseGameEntity
+from .world            import World
+from .state_machine    import StateMachine
+from .outputs          import SteeringOutput, KinematicSteeringOutput
 
 class MovingEntity (BaseGameEntity):
     def __init__(

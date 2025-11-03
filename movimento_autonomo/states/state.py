@@ -4,7 +4,7 @@ import random
 
 from abc import ABC, abstractmethod
 
-from outputs import SteeringOutput
+from ..outputs import SteeringOutput
 
 class State ():
     @abstractmethod 
