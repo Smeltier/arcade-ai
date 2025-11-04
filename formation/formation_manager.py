@@ -3,7 +3,7 @@ import pygame
 
 from .static import Static
 from .slot_assignment import SlotAssignment
-from ..states.arrive import Arrive
+from movimento_autonomo.states.arrive import Arrive
 
 class FormationManager:
     def __init__(self, pattern):

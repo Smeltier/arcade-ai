@@ -1,12 +1,12 @@
 import pygame
 
-from world import World
-from moving_entity import MovingEntity
-from states.seek import Seek
-from states.wander import Wander
-from states.blended_steering import BlendedSteering
-from input_controller import InputController
-from outputs import BehaviorAndWeight
+from .world import World
+from .moving_entity import MovingEntity
+from .states.seek import Seek
+from .states.wander import Wander
+from .states.blended_steering import BlendedSteering
+from .input_controller import InputController
+from .outputs import BehaviorAndWeight
 
 def main():
     pygame.init()

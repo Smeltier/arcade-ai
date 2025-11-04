@@ -40,7 +40,7 @@ class Arrive (State):
         target_velocity *= target_speed
 
         steering.linear = target_velocity - self.character.velocity
-        steering.linear /= self.time_to_target
+        steering.linear /= self.time_to_target 
 
         if steering.linear.length() > self.max_acceleration:
             steering.linear.scale_to_length(self.max_acceleration)
