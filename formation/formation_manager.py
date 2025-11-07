@@ -3,47 +3,59 @@ import pygame
 
 from .static import Static
 from .slot_assignment import SlotAssignment
+from .formation_machine import FormationMachine
 from movimento_autonomo.states.arrive import Arrive
 
 class FormationManager:
-    def __init__(self, pattern):
+    def __init__(self, start_pattern=None):
         self.slot_assignments = []
-        self.pattern = pattern
-        
         self.world_anchor = Static()
+        self.formation_machine = FormationMachine(self, start_pattern)
+
+    def update(self):
+        self.formation_machine.update()
 
     def update_slot_assignments(self):
         for i, slot in enumerate(self.slot_assignments):
             slot.slot_number = i
 
     def add_character(self, character):
-        if not self.pattern.supports_slots(len(self.slot_assignments) + 1):
+        pattern = self.formation_machine.current_formation
+
+        if not pattern:
+            return False
+
+        if not pattern.supports_slots(len(self.slot_assignments) + 1):
             return False
         
         slot = SlotAssignment(character)
         self.slot_assignments.append(slot)
         self.update_slot_assignments()
+
         return True
 
     def remove_character(self, character):
         self.slot_assignments = [s for s in self.slot_assignments if s.character is not character]
         self.update_slot_assignments()
 
-    def get_drift_offset(self) -> Static:
-        return self.pattern.get_drift_offset(self.slot_assignments)
+    def get_drift_offset(self, pattern) -> Static:
+        return pattern.get_drift_offset(self.slot_assignments)
 
     def update_slots(self):
-        if not self.slot_assignments: 
+        pattern = self.formation_machine.current_formation
+
+        if not self.slot_assignments or not pattern: 
             return
 
-        drift_offset = self.get_drift_offset()
+        drift_offset = self.get_drift_offset(pattern)
         total_slots = len(self.slot_assignments)
 
         for assignment in self.slot_assignments:
+
             character = assignment.character
             slot_number = assignment.slot_number
 
-            slot_location = self.pattern.get_slot_location(slot_number, total_slots)
+            slot_location = pattern.get_slot_location(slot_number, total_slots)
             
             target_position = self.world_anchor.position + slot_location.position - drift_offset.position
             

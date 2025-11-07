@@ -13,9 +13,10 @@ from movimento_autonomo.states.seek import Seek
 
 pygame.init()
 
+pygame.display.set_caption("Formation Pattern")
+
 WIDTH, HEIGHT = 800, 600
 SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Formation Pattern Demo")
 clock = pygame.time.Clock()
 
 world = World(SCREEN)
@@ -32,6 +33,7 @@ for i in range(num_agents):
 
     entity = MovingEntity(x, y, world, color="red", max_speed=80, max_acceleration=60)
     entities.append(entity)
+
     formation_manager.add_character(entity)
 
 anchor_target = Static((WIDTH // 2, HEIGHT // 2))
@@ -45,24 +47,40 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        if event.type == pygame.KEYDOWN:
+
+            if event.key == pygame.K_q:
+                mouse_x, mouse_y = pygame.mouse.get_pos()
+                
+                entity = MovingEntity(
+                    mouse_x, 
+                    mouse_y, 
+                    world, 
+                    color="red", 
+                    max_speed=80, 
+                    max_acceleration=60
+                )
+                
+                entities.append(entity)
+                formation_manager.add_character(entity)
+
+            elif event.key == pygame.K_w:
+                if entities: 
+                    entity_to_remove = entities.pop() 
+                    
+                    if hasattr(formation_manager, 'remove_character'):
+                        formation_manager.remove_character(entity_to_remove)
 
     mouse_position = pygame.mouse.get_pos()
     anchor_target.position.update(mouse_position)
     
     formation_manager.update_slots()
 
+    keys = pygame.key.get_pressed()
+
+
     for entity in entities:
         entity.update(delta_time)
-
-        distance = (entity.position - entity.state_machine.current_state.target.position).length()
-
-        if distance <= entity.slow_radius:
-            entity.state_machine.change_state(Arrive(entity, entity.state_machine.current_state.target))
-            entity.max_speed = 100
-        else:
-            entity.state_machine.change_state(Seek(entity, entity.state_machine.current_state.target))
-            entity.max_speed = 80
-
 
     SCREEN.fill("black")
 
