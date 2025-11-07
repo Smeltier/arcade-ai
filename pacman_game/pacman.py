@@ -48,7 +48,7 @@ class PacMan (Entity):
         return False
     
     # update_score
-    def _make_point(self) -> None:
+    def _update_score(self) -> None:
         """ Aumenta a pontuação baseado em qual tipo de pastilha o personagem comeu. """
 
         row = int(self.position.y // self._ENVIRONMENT.cell_height)
@@ -76,7 +76,7 @@ class PacMan (Entity):
 
         if self._is_on_grid():
             self._play_eat_sound()
-            self._make_point()
+            self._update_score()
 
             if self._can_move(self._next_orientation):
                 self._current_orientation = self._next_orientation

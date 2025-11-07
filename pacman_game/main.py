@@ -19,13 +19,13 @@ environment = Environment(
     maze_file = 'pacman_game/maze.txt'
 )
 
-pacman = PacMan (
-    x = 15 * environment.cell_width + environment.cell_width // 2, 
-    y = 18 * environment.cell_height + environment.cell_height // 2, 
-    environment = environment
+environment.add_entity(
+    PacMan (
+        x = 15 * environment.cell_width + environment.cell_width // 2, 
+        y = 18 * environment.cell_height + environment.cell_height // 2, 
+        environment = environment
+    )
 )
-
-environment.add_entity(pacman)
 
 running = True
 
