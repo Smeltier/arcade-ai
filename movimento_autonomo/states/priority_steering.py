@@ -1,8 +1,8 @@
 import pygame
 
-from state import State
-from blended_steering import BlendedSteering
-from outputs import SteeringOutput
+from .state import State
+from .blended_steering import BlendedSteering
+from ..outputs import SteeringOutput
 
 class PrioritySteering (State):
    def __init__(self, character, groups: list[BlendedSteering]) -> None:

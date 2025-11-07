@@ -1,7 +1,7 @@
 import pygame
 
-from states.seek import Seek
-from outputs import SteeringOutput
+from .seek import Seek
+from ..outputs import SteeringOutput
 
 class Pursue (Seek):
     def __init__(self, character, target):

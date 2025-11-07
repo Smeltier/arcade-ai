@@ -1,7 +1,7 @@
 import pygame
 
-from states.seek import Seek
-from outputs import SteeringOutput, Collision
+from .seek import Seek
+from ..outputs import SteeringOutput, Collision
 
 class ObstacleAvoidance (Seek):
     def __init__(self, character, target):

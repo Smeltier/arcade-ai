@@ -50,6 +50,6 @@ class Arrive (State):
     
     def enter(self):
         print(f"[DEBUG] {self.character.ID} -> Arrive")
-        self.character.change_color("blue")
+        self.character.change_color("blue") 
     
     def exit(self): pass

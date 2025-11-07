@@ -1,20 +1,20 @@
 import pygame
 
-from moving_entity import MovingEntity
-from states.state import State
-from states.align import Align
-from states.seek import Seek
-from states.wander import Wander
-from states.face import Face
-from states.arrive import Arrive
-from states.evade import Evade
-from states.separation import Separation
-from states.obstacle_avoidance import ObstacleAvoidance
-from states.collision_avoidance import CollisionAvoidance
-from states.pursue import Pursue
-from states.velocity_match import VelocityMatch
-from states.flee import Flee
-from states.attraction import Attraction
+from .moving_entity import MovingEntity
+from .states.state import State
+from .states.align import Align
+from .states.seek import Seek
+from .states.wander import Wander
+from .states.face import Face
+from .states.arrive import Arrive
+from .states.evade import Evade
+from .states.separation import Separation
+from .states.obstacle_avoidance import ObstacleAvoidance
+from .states.collision_avoidance import CollisionAvoidance
+from .states.pursue import Pursue
+from .states.velocity_match import VelocityMatch
+from .states.flee import Flee
+from .states.attraction import Attraction
 
 class InputController:
     def __init__(self, character, target=None):

@@ -1,7 +1,7 @@
 import pygame
 
-from states.flee import Flee
-from outputs import SteeringOutput
+from .flee import Flee
+from ..outputs import SteeringOutput
 
 class Evade(Flee):
     def __init__(self, character, target):

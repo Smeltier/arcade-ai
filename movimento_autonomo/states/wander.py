@@ -2,9 +2,9 @@ import pygame
 import random
 import math
 
-from states.face import Face
-from states.dummy_entity import DummyEntity
-from outputs import SteeringOutput
+from .face import Face
+from .dummy_entity import DummyEntity
+from ..outputs import SteeringOutput
 
 class Wander (Face):
     def __init__(self, character, target) -> None:

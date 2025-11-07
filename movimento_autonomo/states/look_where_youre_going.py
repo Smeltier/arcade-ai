@@ -1,7 +1,7 @@
 import pygame
 
-from align import Align
-from outputs import SteeringOutput
+from .align import Align
+from ..outputs import SteeringOutput
 
 class LookWhereYoureGoing (Align):
     def __init__(self, character, target) -> None:

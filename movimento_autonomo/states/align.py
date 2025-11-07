@@ -1,8 +1,8 @@
 import math
 import pygame
 
-from states.state import State
-from outputs import SteeringOutput
+from .state import State
+from ..outputs import SteeringOutput
 
 class Align(State):
     def __init__(self, character, target) -> None:

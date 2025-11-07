@@ -1,7 +1,7 @@
 import pygame
 
-from states.state import State
-from outputs import SteeringOutput, BehaviorAndWeight
+from .state import State
+from ..outputs import SteeringOutput, BehaviorAndWeight
 
 class BlendedSteering (State):
     def __init__(self, character, behaviors: list[BehaviorAndWeight]) -> None:

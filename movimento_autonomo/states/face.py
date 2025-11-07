@@ -1,9 +1,9 @@
 import math
 import pygame
 
-from states.align import Align
-from states.steering_target import SteeringTarget
-from outputs import SteeringOutput
+from .align import Align
+from .steering_target import SteeringTarget
+from ..outputs import SteeringOutput
 
 class Face(Align):
     def __init__(self, character, target) -> None:
