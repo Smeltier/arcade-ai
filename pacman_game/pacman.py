@@ -47,6 +47,7 @@ class PacMan (Entity):
         
         return False
     
+    # update_score
     def _make_point(self) -> None:
         """ Aumenta a pontuação baseado em qual tipo de pastilha o personagem comeu. """
 
