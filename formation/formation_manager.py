@@ -7,19 +7,20 @@ from .formation_machine import FormationMachine
 from movimento_autonomo.states.arrive import Arrive
 
 class FormationManager:
-    def __init__(self, start_pattern=None):
+    def __init__(self, owner_character, start_pattern=None):
+        self.owner_character = owner_character
         self.slot_assignments = []
-        self.world_anchor = Static()
+        self.world_anchor = owner_character.static
         self.formation_machine = FormationMachine(self, start_pattern)
 
-    def update(self):
+    def update(self) -> None:
         self.formation_machine.update()
 
-    def update_slot_assignments(self):
+    def update_slot_assignments(self) -> None:
         for i, slot in enumerate(self.slot_assignments):
             slot.slot_number = i
 
-    def add_character(self, character):
+    def add_character(self, character) -> bool:
         pattern = self.formation_machine.current_formation
 
         if not pattern:
@@ -34,14 +35,14 @@ class FormationManager:
 
         return True
 
-    def remove_character(self, character):
+    def remove_character(self, character) -> None:
         self.slot_assignments = [s for s in self.slot_assignments if s.character is not character]
         self.update_slot_assignments()
 
     def get_drift_offset(self, pattern) -> Static:
         return pattern.get_drift_offset(self.slot_assignments)
 
-    def update_slots(self):
+    def update_slots(self) -> None:
         pattern = self.formation_machine.current_formation
 
         if not self.slot_assignments or not pattern: 

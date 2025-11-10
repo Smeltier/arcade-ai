@@ -2,14 +2,11 @@ import pygame
 import math
 
 from .formation_manager import FormationManager
-from .defensive_circle_pattern import DefensiveCirclePattern
+from .pattern.defensive_circle_pattern import DefensiveCirclePattern
 from .static import Static
 
 from movimento_autonomo.world import World
 from movimento_autonomo.moving_entity import MovingEntity
-
-from movimento_autonomo.states.arrive import Arrive
-from movimento_autonomo.states.seek import Seek
 
 pygame.init()
 
