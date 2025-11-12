@@ -10,6 +10,17 @@ class DefensiveCirclePattern (Pattern):
         self.character_radius = character_radius
         self.number_of_slots = 0
 
+    def calculate_ideal_radius(self, total_slots) -> float:
+        if total_slots <= 0: return 0.0
+        if total_slots == 1: return self.character_radius * 2
+
+        try:
+            radius = self.character_radius / math.sin(math.pi / total_slots)
+        except:
+            radius = self.character_radius * 2
+
+        return radius
+
     def calculate_number_of_slots(self, assignments) -> int:
         """ Calcula o número de slots ocupados da formação. """
         return len(assignments)

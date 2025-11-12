@@ -1,45 +1,47 @@
 import pygame
 import math
 
-from .formation_manager import FormationManager
-from .pattern.defensive_circle_pattern import DefensiveCirclePattern
-from .static import Static
+from formation.formation_entity import FormationEntity
+from formation.pattern.defensive_circle_pattern import DefensiveCirclePattern
+from formation.static import Static
 
 from movimento_autonomo.world import World
-from movimento_autonomo.moving_entity import MovingEntity
+from movimento_autonomo.states.arrive import Arrive
+
 
 pygame.init()
-
-pygame.display.set_caption("Formation Pattern")
+pygame.display.set_caption("Formation Pattern (Modelo Líder-Seguidor)")
 
 WIDTH, HEIGHT = 800, 600
 SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 
 world = World(SCREEN)
-pattern = DefensiveCirclePattern(character_radius = 20)
-formation_manager = FormationManager(pattern)
+pattern = DefensiveCirclePattern(character_radius=15)
 
 entities = []
-num_agents = 15
+num_agents = 10
 center_x, center_y = WIDTH // 2, HEIGHT // 2
 
-for i in range(num_agents):
-    x = center_x + math.cos(i * 2 * math.pi / num_agents) * 100
-    y = center_y + math.sin(i * 2 * math.pi / num_agents) * 100
+leader = FormationEntity(
+    center_x, 
+    center_y, 
+    world, 
+    color="yellow",
+    max_speed=100, 
+    max_acceleration=80,
+)
+leader.become_leader(pattern) 
+entities.append(leader)
+world.add_entity(leader) 
 
-    entity = MovingEntity(x, y, world, color="red", max_speed=80, max_acceleration=60)
-    entities.append(entity)
-
-    formation_manager.add_character(entity)
-
-anchor_target = Static((WIDTH // 2, HEIGHT // 2))
-
-formation_manager.world_anchor = anchor_target
+leader_target = Static((center_x, center_y))
+leader.state_machine.change_state(Arrive(leader, leader_target))
 
 running = True
 while running:
     delta_time = clock.tick(60) / 1000.0
+    if delta_time == 0: continue 
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -49,39 +51,40 @@ while running:
             if event.key == pygame.K_q:
                 mouse_x, mouse_y = pygame.mouse.get_pos()
                 
-                entity = MovingEntity(
+                new_follower = FormationEntity(
                     mouse_x, 
                     mouse_y, 
                     world, 
                     color="red", 
                     max_speed=80, 
-                    max_acceleration=60
+                    max_acceleration=100,
+                    threshold=5
                 )
                 
-                entities.append(entity)
-                formation_manager.add_character(entity)
+                entities.append(new_follower)
+                world.add_entity(new_follower)
+                leader.add_follower(new_follower)
 
             elif event.key == pygame.K_w:
-                if entities: 
-                    entity_to_remove = entities.pop() 
+                if len(entities) > 1:
                     
-                    if hasattr(formation_manager, 'remove_character'):
-                        formation_manager.remove_character(entity_to_remove)
+                    entity_to_remove = entities.pop()
+                    
+                    if entity_to_remove is leader:
+                        entities.append(leader) 
+                    else:
+                        world.remove_entity(entity_to_remove)
+                        leader.formation_manager.remove_character(entity_to_remove) # type: ignore
 
     mouse_position = pygame.mouse.get_pos()
-    anchor_target.position.update(mouse_position)
+    leader_target.position.update(mouse_position)
     
-    formation_manager.update_slots()
-
-    keys = pygame.key.get_pressed()
-
-
     for entity in entities:
         entity.update(delta_time)
 
     SCREEN.fill("black")
 
-    pygame.draw.circle(SCREEN, "yellow", (int(anchor_target.position.x), int(anchor_target.position.y)), 6)
+    pygame.draw.circle(SCREEN, "blue", (int(leader_target.position.x), int(leader_target.position.y)), 6)
 
     for entity in entities:
         entity.draw(SCREEN)

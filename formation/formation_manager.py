@@ -10,7 +10,7 @@ class FormationManager:
     def __init__(self, owner_character, start_pattern=None):
         self.owner_character = owner_character
         self.slot_assignments = []
-        self.world_anchor = owner_character.static
+        # self.world_anchor = owner_character.static
         self.formation_machine = FormationMachine(self, start_pattern)
 
     def update(self) -> None:
@@ -33,39 +33,42 @@ class FormationManager:
         self.slot_assignments.append(slot)
         self.update_slot_assignments()
 
+        character.set_formation_leader(self.owner_character, slot.slot_number)
+
         return True
 
     def remove_character(self, character) -> None:
         self.slot_assignments = [s for s in self.slot_assignments if s.character is not character]
+        character.clear_formation_leader()
         self.update_slot_assignments()
 
     def get_drift_offset(self, pattern) -> Static:
         return pattern.get_drift_offset(self.slot_assignments)
 
-    def update_slots(self) -> None:
-        pattern = self.formation_machine.current_formation
+    # def update_slots(self) -> None:
+    #     pattern = self.formation_machine.current_formation
 
-        if not self.slot_assignments or not pattern: 
-            return
+    #     if not self.slot_assignments or not pattern: 
+    #         return
 
-        drift_offset = self.get_drift_offset(pattern)
-        total_slots = len(self.slot_assignments)
+    #     drift_offset = self.get_drift_offset(pattern)
+    #     total_slots = len(self.slot_assignments)
 
-        for assignment in self.slot_assignments:
+    #     for assignment in self.slot_assignments:
 
-            character = assignment.character
-            slot_number = assignment.slot_number
+    #         character = assignment.character
+    #         slot_number = assignment.slot_number
 
-            slot_location = pattern.get_slot_location(slot_number, total_slots)
+    #         slot_location = pattern.get_slot_location(slot_number, total_slots)
             
-            target_position = self.world_anchor.position + slot_location.position - drift_offset.position
+    #         target_position = self.world_anchor.position + slot_location.position - drift_offset.position
             
-            if not hasattr(character, 'formation_target'):
-                character.formation_target = Static(target_position)
-            else:
-                character.formation_target.position = target_position
+    #         if not hasattr(character, 'formation_target'):
+    #             character.formation_target = Static(target_position)
+    #         else:
+    #             character.formation_target.position = target_position
 
-            if not isinstance(character.state_machine.current_state, Arrive):
-                character.state_machine.change_state(Arrive(character, character.formation_target))
-            else:
-                character.state_machine.current_state.target = character.formation_target
+    #         if not isinstance(character.state_machine.current_state, Arrive):
+    #             character.state_machine.change_state(Arrive(character, character.formation_target))
+    #         else:
+    #             character.state_machine.current_state.target = character.formation_target

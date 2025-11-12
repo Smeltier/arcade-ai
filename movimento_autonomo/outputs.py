@@ -16,6 +16,6 @@ class Collision:
         self.normal = pygame.math.Vector2
 
 class BehaviorAndWeight:
-    def __init__(self, behavior, weight=1) -> None:
+    def __init__(self, behavior, weight=1.0) -> None:
         self.behavior = behavior
-        self.weight = weight
+        self.weight: float = weight
